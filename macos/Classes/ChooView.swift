@@ -1,0 +1,125 @@
+import FlutterMacOS
+
+extension NSWindow {
+  public var screen: NSScreen? {
+    get {
+      // 获取窗口在全局坐标系中的 frame
+      let windowFrame = self.frame
+      
+      // 计算窗口中心点
+      let windowCenter = NSMakePoint(
+          windowFrame.midX,
+          windowFrame.midY
+      )
+      
+      // 遍历所有屏幕，检查中心点所在的屏幕
+      for screen in NSScreen.screens {
+        if screen.frame.contains(windowCenter) {
+          return screen
+        }
+      }
+      return nil
+    }
+  }
+  public func hiddenWindowAtLaunch() {
+    if delegate is ChooWindowManager && (delegate as! ChooWindowManager).isInit {
+      return;
+    }
+    if delegate is ChooWindowManager {
+      (delegate as! ChooWindowManager).isInit = true
+    }
+    self.setIsVisible(false)
+  }
+}
+
+extension NSRect {
+    var topLeft: CGPoint {
+      set {
+        let screenFrameRect = NSScreen.screens[0].frame
+        origin.x = newValue.x
+        origin.y = screenFrameRect.height - newValue.y - size.height
+      }
+      get {
+        let screenFrameRect = NSScreen.screens[0].frame
+        return CGPoint(x: origin.x, y: screenFrameRect.height - origin.y - size.height)
+      }
+  }
+}
+
+class ChooWindow: NSWindow {
+  public var windowId: Int64? {
+    get {
+      return (delegate as? ChooWindowManager)?.windowId
+    }
+  }
+  
+  override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
+    super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
+    let chooWindowManager = ChooWindowManager(self)
+    delegate = chooWindowManager
+  }
+  
+  override public func order(_ place: NSWindow.OrderingMode, relativeTo otherWin: Int) {
+      super.order(place, relativeTo: otherWin)
+      hiddenWindowAtLaunch()
+  }
+}
+
+open class ChooFlutterViewController: FlutterViewController {
+  private var _windowId: Int64?
+  public var windowId: Int64 {
+    get {
+      return _windowId ?? 0
+    }
+    set (value) {
+      _windowId = value
+    }
+  }
+}
+
+
+func createWindow(args: [String: Any]) -> Int64? {
+  if let RegisterGeneratedPlugins = ChooWindowManagerPlugin.RegisterGeneratedPlugins {
+    let beforeWindowId: Int64? = args["beforeWindowId"] as? Int64
+    let project = FlutterDartProject()
+    let window = ChooWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 0, height: 0),
+      styleMask: [.miniaturizable, .closable, .resizable, .titled],
+      backing: .buffered,
+      defer: false
+    )
+    let windowId = (window.delegate as? ChooWindowManager)!.windowId
+    var commandLineArguments: [String: Any] = [:]
+    commandLineArguments.merge(args) { (current, _) in current }
+    
+    if window.delegate is ChooWindowManager {
+      (window.delegate as! ChooWindowManager).beforeWindowId = beforeWindowId
+    }
+    
+    do {
+      let jsonData = try JSONSerialization.data(withJSONObject: commandLineArguments, options: .prettyPrinted)
+      if let jsonString = String(data: jsonData, encoding: .utf8) {
+        project.dartEntrypointArguments = ["\(windowId)", jsonString]
+      }
+    } catch {
+      project.dartEntrypointArguments = ["\(windowId)"]
+    }
+    let flutterViewController = ChooFlutterViewController(project: project)
+    flutterViewController.windowId = windowId
+    window.contentViewController = flutterViewController
+    window.disableSnapshotRestoration()
+    window.makeKeyAndOrderFront(nil)
+    window.contentView?.translatesAutoresizingMaskIntoConstraints = true
+    RegisterGeneratedPlugins(flutterViewController)
+    return windowId
+  }
+  return nil
+}
+
+func closeWindows(_ windowIds: [Int64]?) {
+  for id in (windowIds ?? Array(ChooWindowManager.windowMap.keys)) {
+    if let wManager = ChooWindowManager.windowMap[id] {
+      wManager.close()
+    }
+  }
+}
