@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/widgets.dart';
 
 enum WindowAnimationBehavior { none, alertPanel, documentWindow, utilityWindow }

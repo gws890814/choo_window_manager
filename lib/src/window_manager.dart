@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter/services.dart';
 
