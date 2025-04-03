@@ -34,16 +34,6 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public var windowChannel: FlutterMethodChannel!
   public var windowReady: Bool = false
   private var interceptClose: Bool = false
-  
-  public var beforeWindowManager: ChooWindowManager? {
-    get {
-      if beforeWindowId != nil {
-        return ChooWindowManager.windowMap[beforeWindowId!]
-      } else {
-        return nil
-      }
-    }
-  }
 
   public init(_ window: NSWindow) {
     windowId = ChooWindowManager.incrementid
@@ -137,7 +127,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   
   public func center(args: [String: Any?]) {
     let animate: Bool = args["animate"] as? Bool ?? false
-    let screen = (beforeWindowManager?.window.screen ?? window.screen ?? NSScreen.main)!
+    let screen = (window.screen ?? NSScreen.main)!
     var frame = window.frame
     frame.origin.x = screen.visibleFrame.minX + (screen.visibleFrame.width - frame.width) / 2
     frame.origin.y = screen.visibleFrame.minY + (screen.visibleFrame.height - frame.height) / 2
@@ -162,7 +152,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       print("Invalid arguments: x or y missing or not CGFloat")
       return
     }
-    let screen = (beforeWindowManager?.window.screen ?? window.screen ?? NSScreen.main)!
+    let screen = (window.screen ?? NSScreen.main)!
     var frame = window.frame
     
     frame.origin.x = screen.visibleFrame.origin.x + x
@@ -187,7 +177,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let x = rect.origin.x;
     let y = rect.origin.y;
     
-    let screen = (beforeWindowManager?.window.screen ?? window.screen ?? NSScreen.main)!
+    let screen = (window.screen ?? NSScreen.main)!
     
     frame.size.width = width
     frame.size.height = height

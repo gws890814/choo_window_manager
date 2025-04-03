@@ -1,26 +1,6 @@
 import FlutterMacOS
 
 extension NSWindow {
-  public var screen: NSScreen? {
-    get {
-      // 获取窗口在全局坐标系中的 frame
-      let windowFrame = self.frame
-      
-      // 计算窗口中心点
-      let windowCenter = NSMakePoint(
-          windowFrame.midX,
-          windowFrame.midY
-      )
-      
-      // 遍历所有屏幕，检查中心点所在的屏幕
-      for screen in NSScreen.screens {
-        if screen.frame.contains(windowCenter) {
-          return screen
-        }
-      }
-      return nil
-    }
-  }
   public func hiddenWindowAtLaunch() {
     if delegate is ChooWindowManager && (delegate as! ChooWindowManager).isInit {
       return;
@@ -80,13 +60,15 @@ open class ChooFlutterViewController: FlutterViewController {
 
 func createWindow(args: [String: Any]) -> Int64? {
   if let RegisterGeneratedPlugins = ChooWindowManagerPlugin.RegisterGeneratedPlugins {
-    let beforeWindowId: Int64? = args["beforeWindowId"] as? Int64
+    let beforeWindowId: Int64 = args["beforeWindowId"] as! Int64
     let project = FlutterDartProject()
+    let screen: NSScreen = (ChooWindowManager.windowMap[beforeWindowId]?.window.screen ?? NSApp.mainWindow?.screen ?? NSScreen.main)!
     let window = ChooWindow(
       contentRect: NSRect(x: 0, y: 0, width: 0, height: 0),
       styleMask: [.miniaturizable, .closable, .resizable, .titled],
       backing: .buffered,
-      defer: false
+      defer: false,
+      screen: screen
     )
     let windowId = (window.delegate as? ChooWindowManager)!.windowId
     var commandLineArguments: [String: Any] = [:]

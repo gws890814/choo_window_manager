@@ -14,7 +14,7 @@ class ChooWindowManager {
 
   ChooWindowManager.ready(
     ChooWindowOptions options,
-    void Function(ChooWindowManager current) callback,
+    void Function(ChooWindowManager window) callback,
   ) : id = options.id,
       _windowChannel = MethodChannel('choo_window_manager_${options.id}') {
     current = this;
@@ -23,47 +23,29 @@ class ChooWindowManager {
 
   Future<void> _init(
     ChooWindowOptions options,
-    void Function(ChooWindowManager current) callback,
+    void Function(ChooWindowManager window) callback,
   ) async {
-    print('flutterReady start');
     await _windowChannel.invokeMethod<void>("flutterReady", args);
-    // print('flutterReady end');
-    // print('setSize start');
     await setSize(options.size, animate: false);
-    // print('setSize end');
-    // print('miniSize start');
-    // if (options.minSize != null) {
-    //   await setMinSize(options.minSize!);
-    // }
-    // print('miniSize end');
-    // print('maxSize start');
-    // if (options.maxSize != null) {
-    //   await setMaxSize(options.maxSize!);
-    // }
-    // print('maxSize end');
-    // print('setTitle start');
-    // if (options.title != null) await setTitle(options.title!);
-    // print('setTitle end');
-    // print('setAnimationBehavior start');
-    // if (options.animationBehavior != null) {
-    //   await setAnimationBehavior(options.animationBehavior!);
-    // }
-    // print('setAnimationBehavior end');
-    // print('setTitleStyle start');
-    // if (options.titleBarStyle != null) {
-    //   await setTitleStyle(options.titleBarStyle!);
-    // }
-    // print('setTitleStyle end');
-    // print('position start');
-    // if (options.center) {
-    await center();
-    // } else if (options.offset != null) {
-    //   await setPosition(options.offset!);
-    // }
-    // print('position end');
-    // print('windowReady start');
+    if (options.minSize != null) {
+      await setMinSize(options.minSize!);
+    }
+    if (options.maxSize != null) {
+      await setMaxSize(options.maxSize!);
+    }
+    if (options.title != null) await setTitle(options.title!);
+    if (options.animationBehavior != null) {
+      await setAnimationBehavior(options.animationBehavior!);
+    }
+    if (options.titleBarStyle != null) {
+      await setTitleStyle(options.titleBarStyle!);
+    }
+    if (options.center) {
+      await center();
+    } else if (options.offset != null) {
+      await setPosition(options.offset!);
+    }
     await _windowChannel.invokeMethod<void>("windowReady", args);
-    print('windowReady end');
     callback(this);
   }
 
