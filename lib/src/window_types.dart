@@ -42,7 +42,7 @@ class ChooWindowOptions {
   final Size size;
   final Size? minSize;
   final Size? maxSize;
-  final Point? offset;
+  final Offset? offset;
   final String? title;
   final WindowAnimationBehavior? animationBehavior;
   final WindowTitleVisibility? titleBarStyle;

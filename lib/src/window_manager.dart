@@ -158,20 +158,20 @@ extension ChooCurrentWindowManager on ChooWindowManager {
     return Size(result['width']!, result['height']!);
   }
 
-  Future<Point> getPosition() async {
+  Future<Offset> getPosition() async {
     Map<String, double> result =
         (await _windowChannel.invokeMethod<Map<Object?, Object?>>(
           'getPosition',
           args,
         ))!.cast<String, double>();
     ;
-    return Point(result['x']!, result['y']!);
+    return Offset(result['x']!, result['y']!);
   }
 
-  Future<void> setPosition(Point position, {bool animate = false}) async {
+  Future<void> setPosition(Offset position, {bool animate = false}) async {
     final Map<String, dynamic> arguments = {
-      'x': position.x,
-      'y': position.y,
+      'x': position.dx,
+      'y': position.dy,
       'animate': animate,
       ...args,
     };
