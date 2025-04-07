@@ -52,8 +52,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func show() {
     window.setIsVisible(true)
     DispatchQueue.main.async {
-      self.window.makeKeyAndOrderFront(nil)
       NSApp.activate(ignoringOtherApps: true)
+      self.window.makeKeyAndOrderFront(nil)
       self.emitEvent("show", args: nil)
     }
   }

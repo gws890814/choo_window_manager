@@ -13,8 +13,8 @@ void main(List<dynamic> args) async {
       windowId,
       title: "测试一下",
       // offset: Offset(0, 0),
-      size: Size(500, 300),
-      animationBehavior: WindowAnimationBehavior.documentWindow,
+      // size: Size(500, 300),
+      // animationBehavior: WindowAnimationBehavior.documentWindow,
       // titleBarStyle: WindowTitleVisibility.hidden,
     ),
     (window) async {
@@ -22,7 +22,6 @@ void main(List<dynamic> args) async {
       // await window.setPosition(Point(0, 0));
       // position = await window.getPosition();
       await window.show();
-      await window.focus();
       // await window.setPosition(Offset(0, 0), global: false);
       // await window.setBounds(Rect.fromLTWH(0, 0, 200, 300), global: false);
       window.setTitle("title");
@@ -151,8 +150,11 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
       home: Scaffold(
         appBar: AppBar(title: const Text('Plugin example app')),
         body: WindowPanWidget(
-          child: AbsorbPointer(
+          child: SizedBox(
             child: GestureDetector(
+              onPanStart: (details) {},
+              onPanEnd: (details) {},
+              onPanCancel: () {},
               onTap: () async {
                 if (ChooWindowManager.current.id == 0) {
                   await ChooWindowManager.createWindow(null);
@@ -170,10 +172,8 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
                   //   }
                 }
               },
-              child: Container(
-                color: Colors.red,
-                child: Text('Running on: $_platformVersion\n'),
-              ),
+              // behavior: HitTestBehavior.opaque, // 阻止父组件接收事件
+              child: Center(child: Text('Running on: $_platformVersion')),
             ),
           ),
         ),
