@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
@@ -12,7 +12,7 @@ void main(List<dynamic> args) async {
     ChooWindowOptions(
       windowId,
       title: "测试一下",
-      // offset: Point(0, 0),
+      // offset: Offset(0, 0),
       size: Size(500, 300),
       animationBehavior: WindowAnimationBehavior.documentWindow,
       // titleBarStyle: WindowTitleVisibility.hidden,
@@ -23,18 +23,9 @@ void main(List<dynamic> args) async {
       // position = await window.getPosition();
       await window.show();
       await window.focus();
+      // await window.setPosition(Offset(0, 0), global: false);
+      // await window.setBounds(Rect.fromLTWH(0, 0, 200, 300), global: false);
       window.setTitle("title");
-      // await window.getPosition(Point(0, 0));
-      // print(await window.getPosition());
-      // Future.delayed(Duration(milliseconds: 1000), () {
-      //   // window.center(animate: true);
-      //   window.setPosition(Point(0, 0), animate: true);
-
-      //   Future.delayed(Duration(milliseconds: 1000), () {
-      //     // window.center(animate: true);
-      //     window.center(animate: true);
-      //   });
-      // });
     },
   );
   // // await the initialization of the plugin.
@@ -56,24 +47,75 @@ void main(List<dynamic> args) async {
   // });
   // ChooWindowManager
   // print(await ChooWindowManager().getPlatformVersion());
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget with WindowManagerEvent {
+  MyApp({super.key}) {
+    if (ChooWindowManager.current.id == 0) {
+      WindowManagerEvent.addListener(this);
+      WindowManagerEvent.addListenHover(this);
+    }
+  }
+
+  @override
+  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
+    return {"a": true};
+  }
+
+  @override
+  void onHover(Offset offset) {}
+
+  @override
+  Future<bool> onWillClose() async {
+    return false;
+  }
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WindowManagerEvent {
   String _platformVersion = 'Unknown';
   // final _chooWindowManagerPlugin = ChooWindowManager();
-
   @override
   void initState() {
     super.initState();
-    // initPlatformState();
+    WindowManagerEvent.addListener(this);
+  }
+
+  @override
+  void onFocus() {
+    super.onFocus();
+  }
+
+  @override
+  void onShow() {
+    // TODO: implement onShow
+    super.onShow();
+    // print('!!!!!!onshow');
+  }
+
+  void onHide() {}
+
+  @override
+  void onMove(GlobalOffset offset) {}
+
+  @override
+  Future<bool> onWillClose() async {
+    return true;
+  }
+
+  @override
+  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
+    await Future.delayed(Duration(seconds: 2));
+    return {"b": false};
+  }
+
+  @override
+  void onPan(Offset offset) {
+    // TODO: implement onPan
+    super.onPan(offset);
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -108,29 +150,32 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Plugin example app')),
-        body: GestureDetector(
-          onTap: () async {
-            await ChooWindowManager.createWindow(null);
-            // await ChooWindowManager.current.setBounds(
-            //   Rect.fromLTWH(0, 0, 300, 300),
-            //   animate: true,
-            // );
-            // if (await ChooWindowManager.current.getTitleStyle() ==
-            //     WindowTitleVisibility.hidden) {
-            //   await ChooWindowManager.current.setTitleStyle(
-            //     WindowTitleVisibility.visible,
-            //   );
-            // } else {
-            //   await ChooWindowManager.current.setTitleStyle(
-            //     WindowTitleVisibility.hidden,
-            //   );
-            // }
-            // await ChooWindowManager.current.center(animate: true);
-            // print(windowId);
-            // windowManager?.close();
-            // ChooWindowManager.destroy();
-          },
-          child: Center(child: Text('Running on: $_platformVersion\n')),
+        body: WindowPanWidget(
+          child: AbsorbPointer(
+            child: GestureDetector(
+              onTap: () async {
+                if (ChooWindowManager.current.id == 0) {
+                  await ChooWindowManager.createWindow(null);
+                } else {
+                  //   WindowEmit<Map>? v = await ChooWindowManager.current.emit<Map>(
+                  //     0,
+                  //     "test",
+                  //   );
+                  //   Map<String, dynamic>? result =
+                  //       v?.result.cast<String, dynamic>();
+                  //   if (v != null) {
+                  //     print(
+                  //       'v.id: ${v.id}, v.method: ${v.method}, v.arguments: ${v.result}',
+                  //     );
+                  //   }
+                }
+              },
+              child: Container(
+                color: Colors.red,
+                child: Text('Running on: $_platformVersion\n'),
+              ),
+            ),
+          ),
         ),
       ),
     );

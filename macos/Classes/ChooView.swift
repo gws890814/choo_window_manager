@@ -12,20 +12,6 @@ extension NSWindow {
   }
 }
 
-extension NSRect {
-    var topLeft: CGPoint {
-      set {
-        let screenFrameRect = NSScreen.screens[0].frame
-        origin.x = newValue.x
-        origin.y = screenFrameRect.height - newValue.y - size.height
-      }
-      get {
-        let screenFrameRect = NSScreen.screens[0].frame
-        return CGPoint(x: origin.x, y: screenFrameRect.height - origin.y - size.height)
-      }
-  }
-}
-
 class ChooWindow: NSWindow {
   public var windowId: Int64? {
     get {
@@ -56,7 +42,6 @@ open class ChooFlutterViewController: FlutterViewController {
     }
   }
 }
-
 
 func createWindow(args: [String: Any]) -> Int64? {
   if let RegisterGeneratedPlugins = ChooWindowManagerPlugin.RegisterGeneratedPlugins {
@@ -90,8 +75,10 @@ func createWindow(args: [String: Any]) -> Int64? {
     flutterViewController.windowId = windowId
     window.contentViewController = flutterViewController
     window.disableSnapshotRestoration()
+    window.isMovableByWindowBackground = true
+//    window.level = .floating
+//    window.collectionBehavior = [.managed, .fullScreenPrimary] // 启用跨屏管理
     window.makeKeyAndOrderFront(nil)
-    window.contentView?.translatesAutoresizingMaskIntoConstraints = true
     RegisterGeneratedPlugins(flutterViewController)
     return windowId
   }

@@ -28,7 +28,7 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       (registrar.view!.window!.contentViewController as! ChooFlutterViewController).windowId
     }
   }
-  
+    
   public init(_ registrar: FlutterPluginRegistrar) {
     self.registrar = registrar;
     super.init()
@@ -43,8 +43,8 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
     
     wManager.globalChannel = FlutterMethodChannel(name: "choo_window_manager", binaryMessenger: registrar.messenger)
     wManager.windowChannel = FlutterMethodChannel(name: "choo_window_manager_\(windowId)", binaryMessenger: registrar.messenger)
-    wManager.globalChannel.setMethodCallHandler(globalHandle)
-    wManager.windowChannel.setMethodCallHandler(windowHandle)
+    wManager.globalChannel?.setMethodCallHandler(globalHandle)
+    wManager.windowChannel?.setMethodCallHandler(windowHandle)
   }
 
   public func globalHandle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -98,9 +98,34 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       wManager.close()
       result(nil)
       break
+    case "isVisible":
+      result(wManager.isVisible())
+      break
+    case "isMaximized":
+      result(wManager.isMaximized())
+      break
+    case "maximize":
+      wManager.maximize()
+      result(nil)
+      break
+    case "unmaximize":
+      wManager.unmaximize()
+      result(nil)
+      break
+    case "isMinimized":
+      result(wManager.isMinimized())
+      break
+    case "minimize":
+      wManager.minimize()
+      result(nil)
+      break
+    case "restore":
+      wManager.restore()
+      result(nil)
+      break
     case "getSize":
       let size: NSSize = wManager.getSize()
-      result(["width": size.width, "height": size.width])
+      result(["width": size.width, "height": size.height])
       break
     case "setSize":
       wManager.setSize(args: args)
@@ -125,8 +150,13 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       result(["width": size.width, "height": size.height])
       break
     case "getPosition":
-      let position: NSPoint = wManager.getPosition()
-      result(["x": position.x, "y": position.y])
+      let position: [String: Any] = wManager.getPosition(args: args)!
+      let global: Bool = args["global"] as? Bool ?? false
+      if global {
+        result(["globalX": position["globalX"], "globalY": position["globalY"], "x": position["x"], "y": position["y"]])
+      } else {
+        result(["x": position["x"], "y": position["y"]])
+      }
       break
     case "setPosition":
       wManager.setPosition(args: args)
@@ -137,13 +167,11 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       result(nil)
       break
     case "getBounds":
-      let rect = wManager.getBounds()
+      let rect = wManager.getBounds(args: args)
       result(["x": rect.origin.x, "y": rect.origin.y, "width": rect.size.width, "height": rect.size.height])
       break
     case "setBounds":
-      let animate = args["animate"] as? Bool ?? false
-      let rect = NSRect(x: args["x"] as! CGFloat, y: args["y"] as! CGFloat, width: args["width"] as! CGFloat, height: args["height"] as! CGFloat)
-      wManager.setBounds(rect: rect, animate: animate)
+      wManager.setBounds(args: args)
       result(nil)
       break
     case "getTitle":
@@ -170,6 +198,58 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
     case "setTitleBarStyle":
       wManager.setTitleBarStyle(args: args)
       result(nil)
+      break
+    case "getOpacity":
+      result(wManager.getOpacity())
+      break
+    case "setOpacity":
+      wManager.setOpacity(args: args)
+      result(nil)
+      break
+    case "addListener":
+      wManager.listener = true
+      result(nil)
+      break
+    case "removeListener":
+      wManager.listener = false
+      result(nil)
+      break
+    case "getMousePoint":
+      result(wManager.getMousePoint())
+      break
+    case "addListenPan":
+      result(wManager.addListenPan())
+      break
+    case "removeListenPan":
+      wManager.removeListenPan()
+      result(nil)
+      break
+    case "addListenHover":
+      let eventid: Int64 = args["eventid"] as! Int64
+      wManager.addListenHover(eventid)
+      result(nil)
+      break
+    case "removeListenHover":
+      let eventid: Int64 = args["eventid"] as! Int64
+      wManager.removeListenHover(eventid)
+      result(nil)
+      break
+    case "addPreListenPan":
+      print("444")
+      let eventid: Int64 = args["eventid"] as! Int64
+      wManager.addPreListenPan(eventid)
+      result(nil)
+      break
+    case "removePreListenPan":
+      let eventid: Int64 = args["eventid"] as! Int64
+      wManager.removePreListenPan(eventid)
+      result(nil)
+      break
+    case "emit":
+      wManager.windowEmit(args: args, callback: { id, arguments  in
+        let method: String = args["method"] as! String
+        result(["id": id, "method": method, "arguments": arguments as Any?])
+      })
       break
     default:
       result(FlutterMethodNotImplemented)
