@@ -14,7 +14,7 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       // offset: Offset(0, 0),
       // size: Size(500, 300),
-      // animationBehavior: WindowAnimationBehavior.documentWindow,
+      animationBehavior: WindowAnimationBehavior.documentWindow,
       // titleBarStyle: WindowTitleVisibility.hidden,
     ),
     (window) async {
@@ -51,10 +51,7 @@ void main(List<dynamic> args) async {
 
 class MyApp extends StatefulWidget with WindowManagerEvent {
   MyApp({super.key}) {
-    if (ChooWindowManager.current.id == 0) {
-      WindowManagerEvent.addListener(this);
-      WindowManagerEvent.addListenHover(this);
-    }
+    WindowManagerEvent.addListener(this);
   }
 
   @override
@@ -75,7 +72,7 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 }
 
 class _MyAppState extends State<MyApp> with WindowManagerEvent {
-  String _platformVersion = 'Unknown';
+  final String _platformVersion = 'Unknown';
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
   void initState() {
@@ -156,23 +153,8 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
               onPanEnd: (details) {},
               onPanCancel: () {},
               onTap: () async {
-                if (ChooWindowManager.current.id == 0) {
-                  await ChooWindowManager.createWindow(null);
-                } else {
-                  //   WindowEmit<Map>? v = await ChooWindowManager.current.emit<Map>(
-                  //     0,
-                  //     "test",
-                  //   );
-                  //   Map<String, dynamic>? result =
-                  //       v?.result.cast<String, dynamic>();
-                  //   if (v != null) {
-                  //     print(
-                  //       'v.id: ${v.id}, v.method: ${v.method}, v.arguments: ${v.result}',
-                  //     );
-                  //   }
-                }
+                await ChooWindowManager.createWindow(null);
               },
-              // behavior: HitTestBehavior.opaque, // 阻止父组件接收事件
               child: Center(child: Text('Running on: $_platformVersion')),
             ),
           ),
