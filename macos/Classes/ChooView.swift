@@ -76,8 +76,6 @@ func createWindow(args: [String: Any]) -> Int64? {
     window.contentViewController = flutterViewController
     window.disableSnapshotRestoration()
     window.isMovableByWindowBackground = true
-//    window.level = .floating
-//    window.collectionBehavior = [.managed, .fullScreenPrimary] // 启用跨屏管理
     window.makeKeyAndOrderFront(nil)
     RegisterGeneratedPlugins(flutterViewController)
     return windowId

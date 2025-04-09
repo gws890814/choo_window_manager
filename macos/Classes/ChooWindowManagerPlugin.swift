@@ -235,7 +235,6 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       result(nil)
       break
     case "addPreListenPan":
-      print("444")
       let eventid: Int64 = args["eventid"] as! Int64
       wManager.addPreListenPan(eventid)
       result(nil)

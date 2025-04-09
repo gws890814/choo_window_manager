@@ -503,7 +503,8 @@ extension ChooWindowManager {
 
 extension ChooWindowManager {
   private struct AssociatedKeys {
-      static var allowClosing: Bool? = nil
+    static var allowClosing: Bool? = nil
+    static var AllowShrinking: Bool? = nil
   }
   var allowClosing: Bool? {
     get {
@@ -524,20 +525,6 @@ extension ChooWindowManager {
     }
   }
   public func emitGlobalEvent(_ eventName: String, args: [String: Any]?) {}
-  
-  public func windowShouldClose(_ sender: NSWindow) -> Bool {
-    if allowClosing == nil {
-      emitEvent("willClose", args: nil, callback: { id, arguments in
-        self.allowClosing = arguments as? Bool
-        self.close()
-      })
-      return false
-    } else {
-      let isClose = allowClosing!
-      allowClosing = nil
-      return isClose
-    }
-  }
   
   public func windowDidResize(_ notification: Notification) {
     let size: NSSize = getSize()
@@ -573,7 +560,7 @@ extension ChooWindowManager {
     emitEvent("focus", args: nil);
   }
   
-  public func windowDidResignMain(_ notification: Notification){
+  public func windowDidResignMain(_ notification: Notification) {
     emitEvent("blur", args: nil);
   }
   
@@ -599,6 +586,20 @@ extension ChooWindowManager {
   
   public func windowDidExitFullScreen(_ notification: Notification){
     emitEvent("didLeaveFullScreen", args: nil);
+  }
+  
+  public func windowShouldClose(_ sender: NSWindow) -> Bool {
+    if allowClosing == nil {
+      emitEvent("willClose", args: nil, callback: { id, arguments in
+        self.allowClosing = arguments as? Bool
+        self.close()
+      })
+      return false
+    } else {
+      let isClose = allowClosing!
+      allowClosing = nil
+      return isClose
+    }
   }
   
   public func windowWillClose(_ notification: Notification) {
