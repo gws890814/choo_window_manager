@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
@@ -18,10 +19,10 @@ void main(List<dynamic> args) async {
       // titleBarStyle: WindowTitleVisibility.hidden,
     ),
     (window) async {
-      // Point position = await window.getPosition();
-      // await window.setPosition(Point(0, 0));
-      // position = await window.getPosition();
       await window.show();
+      // Offset position = await window.getPosition();
+      // print(position);
+      // position = await window.getPosition();
       // await window.setPosition(Offset(0, 0), global: false);
       // await window.setBounds(Rect.fromLTWH(0, 0, 200, 300), global: false);
       window.setTitle("title");

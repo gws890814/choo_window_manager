@@ -186,6 +186,14 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     frameRect.origin.y += (frameRect.size.height - height)
     frameRect.size.width = width
     frameRect.size.height = height
+    applyFrameChange(frameRect: frameRect, animate: animate)
+  }
+  
+  /// 应用窗口框架变更
+  /// - Parameters:
+  ///   - frameRect: 新的窗口框架矩形
+  ///   - animate: 是否使用动画
+  private func applyFrameChange(frameRect: NSRect, animate: Bool) {
     if (animate) {
       window.animator().setFrame(frameRect, display: true, animate: true)
     } else {
@@ -246,11 +254,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     var frame = window.frame
     frame.origin.x = screen.visibleFrame.minX + (screen.visibleFrame.width - frame.width) / 2
     frame.origin.y = screen.visibleFrame.minY + (screen.visibleFrame.height - frame.height) / 2
-    if (animate) {
-      window.animator().setFrame(frame, display: true, animate: true)
-    } else {
-      window.setFrame(frame, display: true)
-    }
+    applyFrameChange(frameRect: frame, animate: animate)
   }
   
   /// 获取窗口位置
@@ -262,23 +266,21 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     if (window.screen == nil) {
       return nil
     }
-    if (global) {
-      let allVisibleFrames = NSScreen.screens.map { $0.visibleFrame }
-      let globalTop = allVisibleFrames.map { $0.maxY }.max() ?? 0
-      
-      let windowTop = windowFrame.origin.y + windowFrame.height
-      let globalX = windowFrame.origin.x
-      let globalY = globalTop - windowTop
-      
-      let screenHeight = window.screen!.visibleFrame.maxY
-      let x = windowFrame.origin.x - window.screen!.visibleFrame.origin.x
-      let y = screenHeight - (windowFrame.origin.y + windowFrame.height)
-
-      return ["globalX": globalX, "globalY": globalY, "x": x, "y": y]
-    }
+    
+    // 计算本地坐标
     let screenHeight = window.screen!.visibleFrame.maxY
     let x = windowFrame.origin.x - window.screen!.visibleFrame.origin.x
     let y = screenHeight - (windowFrame.origin.y + windowFrame.height)
+    
+    if (global) {
+      let globalTop = getGlobalTop()
+      let windowTop = windowFrame.origin.y + windowFrame.height
+      let globalX = windowFrame.origin.x
+      let globalY = globalTop - windowTop
+
+      return ["globalX": globalX, "globalY": globalY, "x": x, "y": y]
+    }
+    
     return ["x": x, "y": y]
   }
   
@@ -290,33 +292,46 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let point: NSPoint = NSPoint(x: args["x"] as! CGFloat, y: args["y"] as! CGFloat)
     
     var targetFrame = window.frame
-    targetFrame.origin = point // 先假设point是origin
+    targetFrame.origin = calculateWindowOrigin(point: point, global: global, size: targetFrame.size)
+    applyFrameChange(frameRect: targetFrame, animate: animate)
+  }
+  
+  /// 获取全局坐标系中的顶部位置
+  /// - Returns: 所有屏幕可见区域的最大Y值
+  private func getGlobalTop() -> CGFloat {
+    let allVisibleFrames = NSScreen.screens.map { $0.visibleFrame }
+    return allVisibleFrames.map { $0.maxY }.max() ?? 0
+  }
+  
+  /// 计算窗口原点位置
+  /// - Parameters:
+  ///   - point: 输入的点坐标
+  ///   - global: 是否使用全局坐标系
+  ///   - size: 窗口大小
+  /// - Returns: 计算后的窗口原点位置
+  private func calculateWindowOrigin(point: NSPoint, global: Bool, size: NSSize) -> NSPoint {
     guard let currentScreen = window.screen ?? NSScreen.main else {
       print("屏幕都找不到")
-      return
+      return .zero
     }
     
+    var origin = NSPoint.zero
+    
     if global {
-      let allVisibleFrames = NSScreen.screens.map { $0.visibleFrame }
-      let globalTop = allVisibleFrames.map { $0.maxY }.max() ?? 0
-      targetFrame.origin.x = point.x
-      targetFrame.origin.y = globalTop - point.y - targetFrame.height
+      let globalTop = getGlobalTop()
+      origin.x = point.x
+      origin.y = globalTop - point.y - size.height
     } else {
       // 本地坐标系 → 当前屏幕可见区域转换
       let visibleFrame = currentScreen.visibleFrame
       
       // 计算窗口左上角在屏幕可见区域的位置
-      targetFrame.origin.x = visibleFrame.origin.x + point.x
+      origin.x = visibleFrame.origin.x + point.x
       let windowTop = visibleFrame.maxY - point.y
-      targetFrame.origin.y = windowTop - targetFrame.height
+      origin.y = windowTop - size.height
     }
     
-    // 执行动画或直接设置
-    if animate {
-        window.animator().setFrame(targetFrame, display: true)
-    } else {
-        window.setFrame(targetFrame, display: true)
-    }
+    return origin
   }
   
   /// 获取窗口边界
@@ -332,7 +347,6 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 设置窗口边界
   /// - Parameter args: 包含x、y、width、height、animate和global参数的字典
   public func setBounds(args: [String: Any]) {
-    // 直接访问非可选的 window，去他妈的条件绑定
     var newFrame = NSRect.zero
     newFrame.size = NSSize(width: args["width"] as! CGFloat, height: args["height"] as! CGFloat)
     
@@ -341,29 +355,9 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let animate = args["animate"] as? Bool ?? false
     let global = args["global"] as? Bool ?? false
     
-    // 直接获取当前屏幕（因为 window 非可选）
-    let currentScreen = window.screen ?? NSScreen.main!
-    
-    if global {
-      let allVisibleFrames = NSScreen.screens.map { $0.visibleFrame }
-      let globalTop = allVisibleFrames.map { $0.maxY }.max() ?? 0
-      newFrame.origin = NSPoint(
-        x: x,
-        y: globalTop - y - newFrame.height
-      )
-    } else {
-      newFrame.origin = NSPoint(
-        x: currentScreen.visibleFrame.origin.x + x,
-        y: currentScreen.visibleFrame.maxY - y - newFrame.height
-      )
-    }
-    
-    // 直接设置 frame，不用判断 window 是否存在
-    if animate {
-      window.animator().setFrame(newFrame, display: true)
-    } else {
-      window.setFrame(newFrame, display: true)
-    }
+    let point = NSPoint(x: x, y: y)
+    newFrame.origin = calculateWindowOrigin(point: point, global: global, size: newFrame.size)
+    applyFrameChange(frameRect: newFrame, animate: animate)
   }
   
   /// 获取窗口标题
