@@ -18,6 +18,9 @@ abstract mixin class WindowManagerEvent {
   /// 存储所有已注册的鼠标悬停事件监听器
   static final List<WindowManagerEvent> _hoverEventList = [];
 
+  /// 存储所有已注册的键盘事件监听器
+  static final List<WindowManagerEvent> _keyboardEventList = [];
+
   /// 当前活动的拖拽事件监听器实例
   /// 由于拖拽操作的特殊性，同一时间只允许存在一个拖拽事件监听器
   static WindowManagerEvent? _instance;
@@ -62,11 +65,11 @@ abstract mixin class WindowManagerEvent {
   ///
   /// 注意：同一时间只允许存在一个拖拽事件监听器
   /// 添加监听器后，可以通过[onPan]方法接收拖拽事件
-  static void addListenPan(WindowManagerEvent instance) {
+  static void addPanListener(WindowManagerEvent instance) {
     assert(_instance == null, 'Only one listener is allowed');
     _instance = instance;
     ChooWindowManager.current._windowChannel
-        .invokeMethod<Map<Object?, Object?>>('addListenPan', {
+        .invokeMethod<Map<Object?, Object?>>('addPanListener', {
           "id": ChooWindowManager.current.id,
         })
         .then((value) {
@@ -80,11 +83,11 @@ abstract mixin class WindowManagerEvent {
   /// [instance] 要移除的监听器实例
   ///
   /// 只有当前活动的拖拽事件监听器才能被移除
-  static void removeListenPan(WindowManagerEvent instance) {
+  static void removePanListener(WindowManagerEvent instance) {
     if (_instance == instance) {
       _instance = null;
       ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removeListenPan',
+        'removePanListener',
         {"id": ChooWindowManager.current.id},
       );
     }
@@ -95,11 +98,11 @@ abstract mixin class WindowManagerEvent {
   /// [instance] 要添加的监听器实例
   ///
   /// 预拖拽事件在实际拖拽开始前触发，可用于准备拖拽相关的状态
-  static void addPreListenPan(WindowManagerEvent instance) {
+  static void addPrePanListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
       ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'addPreListenPan',
+        'addPrePanListener',
         {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
       );
     }
@@ -108,11 +111,11 @@ abstract mixin class WindowManagerEvent {
   /// 移除预拖拽事件监听器
   ///
   /// [instance] 要移除的监听器实例
-  static void removePreListenPan(WindowManagerEvent instance) {
+  static void removePrePanListener(WindowManagerEvent instance) {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
       ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removePreListenPan',
+        'removePrePanListener',
         {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
       );
     }
@@ -123,11 +126,11 @@ abstract mixin class WindowManagerEvent {
   /// [instance] 要添加的监听器实例
   ///
   /// 添加后可以通过[onHover]方法接收鼠标悬停事件
-  static void addListenHover(WindowManagerEvent instance) {
+  static void addHoverListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
       ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'addListenHover',
+        'addHoverListener',
         {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
       );
     }
@@ -136,11 +139,31 @@ abstract mixin class WindowManagerEvent {
   /// 移除鼠标悬停事件监听器
   ///
   /// [instance] 要移除的监听器实例
-  static void removeListenHover(WindowManagerEvent instance) {
+  static void removeHoverListener(WindowManagerEvent instance) {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
       ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removeListenHover',
+        'removeHoverListener',
+        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+      );
+    }
+  }
+
+  static void addKeyboardListener(WindowManagerEvent instance) {
+    if (_keyboardEventList.contains(instance)) {
+      _keyboardEventList.remove(instance);
+      ChooWindowManager.current._windowChannel.invokeMethod<void>(
+        'addKeyboardListener',
+        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+      );
+    }
+  }
+
+  static void removeKeyboardListener(WindowManagerEvent instance) {
+    if (_keyboardEventList.contains(instance)) {
+      _keyboardEventList.remove(instance);
+      ChooWindowManager.current._windowChannel.invokeMethod<void>(
+        'removeKeyboardListener',
         {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
       );
     }
@@ -207,6 +230,8 @@ abstract mixin class WindowManagerEvent {
 
   /// 窗口关闭事件回调
   void onClose() {}
+
+  Future<bool> onKeyboard(KeyboardEvent event) => Future.value(true);
 
   /// 通用事件处理回调
   /// [id] 事件ID
@@ -285,6 +310,16 @@ class ChooWindowManager {
       }
     } else if (WindowEventType.values.map((v) => v.name).contains(method)) {
       dynamic onEventValue;
+      KeyboardEvent? keyboardEvent;
+      if (method == 'keyboard') {
+        List<ModifierFlags> modifierFlags = (arguments["modifierFlags"] as List<Object?>).cast<String>().toList().map((e) => ModifierFlagsExtension.fromString(e)).toList();
+        keyboardEvent = KeyboardEvent(
+          keyCode: arguments['keyCode'],
+          modifierFlags: modifierFlags,
+          characters: arguments['characters'],
+          charactersIgnoringModifiers: arguments['charactersIgnoringModifiers'],
+        );
+      }
       for (var element in WindowManagerEvent._eventList) {
         Map<String, Function> eventMap = {
           "show": element.onShow,
@@ -299,6 +334,7 @@ class ChooWindowManager {
           "willLeaveFullScreen": element.onWillLeaveFullScreen,
           "didLeaveFullScreen": element.onDidLeaveFullScreen,
           "close": element.onClose,
+          "keyboard": element.onKeyboard,
         };
         if (method == "resize") {
           Size size = Size(arguments['width'], arguments['height']);
@@ -323,6 +359,13 @@ class ChooWindowManager {
           );
           if (WindowManagerEvent._eventList.last == element) {
             return onEventValue;
+          }
+        } else if (method == 'keyboard') {
+          bool isNext = await element.onKeyboard(keyboardEvent!);
+          if (!isNext) {
+            return false;
+          } else if (WindowManagerEvent._eventList.last == element) {
+            return true;
           }
         } else if (method == 'willClose') {
           bool isClose = await element.onWillClose();
@@ -454,8 +497,11 @@ extension ChooCurrentWindowManager on ChooWindowManager {
   /// 关闭窗口
   ///
   /// 窗口将被完全关闭，如果需要阻止关闭，请使用[WindowManagerEvent.onWillClose]
-  Future<void> close() async {
-    await _windowChannel.invokeMethod<void>('close', args);
+  Future<void> close({bool force = false}) async {
+    await _windowChannel.invokeMethod<void>('close', {
+      ...args,
+      "force": force,
+    });
   }
 
   /// 检查窗口是否可见

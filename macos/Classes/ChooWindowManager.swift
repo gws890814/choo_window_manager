@@ -60,6 +60,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   private var panStartPoint: CGPoint? = nil
   /// 悬停事件ID列表
   private var hoverIds: [Int64] = []
+  /// 键盘事件监听器，用于捕获快捷键操作（如Command+W关闭窗口）
+  private var keyboardEventMonitor: Any? = nil
 
   /// 初始化窗口管理器
   /// - Parameter window: 要管理的NSWindow实例
@@ -101,8 +103,12 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   }
   
   /// 关闭窗口
-  public func close() {
-    window.performClose(nil)
+  public func close(_ force: Bool = false) {
+    if force {
+      window.close()
+    } else { 
+      window.performClose(nil)
+    }
   }
   
   /// 检查窗口是否可见
@@ -475,41 +481,86 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// - Parameters:
   ///   - id: 监听器ID
   ///   - callback: 鼠标位置变化的回调函数
-  public func addListenHover(_ id: Int64, _ callback: ((_ point: NSPoint) -> Void)? = nil) {
-    // 监听所有鼠标事件（移动、拖拽、进入/离开窗口
+  public func addHoverListener(_ id: Int64, _ callback: ((_ point: NSPoint) -> Void)? = nil) {
+    // 添加监听器ID到列表中（如果不存在）
     if !hoverIds.contains(id) {
       hoverIds.append(id)
     }
+    
+    // 移除现有的监听器（如果存在）以避免重复监听
     if let monitor = moveEvent {
       NSEvent.removeMonitor(monitor)
     }
-    let wManager = self
+    
+    // 立即发送当前鼠标位置
+    sendHoverEvent(callback)
+    
+    // 创建新的鼠标移动事件监听器
     moveEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
-      guard let window = self?.window else { return event }
-        // 获取鼠标在窗口内的坐标（左下角为原点）
-      let screenLocation = NSEvent.mouseLocation
-      let windowLocation = window.convertPoint(fromScreen: screenLocation)
-      // 转换为内容视图坐标系（左上角为原点）
-      if let contentView = window.contentView {
-        let viewLocation = contentView.convert(windowLocation, from: nil)
-        let flippedY = contentView.bounds.height - viewLocation.y
-        let point = CGPoint(x: viewLocation.x, y: flippedY)
-        if point.x < 0 || point.x > wManager.window.frame.width || point.y < 0 || point.y > wManager.window.frame.height {
-          return event
-        }
-        if callback != nil {
-          callback!(windowLocation)
-        }
-        wManager.windowChannel?.invokeMethod("hover", arguments: ["x": point.x, "y": point.y])
+      guard let self = self else { return event }
+      
+      // 处理鼠标移动事件并发送悬停通知
+      if self.processMouseEvent(callback) {
+        return event
+      } else {
+        // 鼠标在窗口外部或无效区域，不处理事件
+        return event
       }
-      return event
     }
+  }
+  
+  /// 处理鼠标事件并发送悬停通知
+  /// - Parameter callback: 可选的回调函数
+  /// - Returns: 是否成功处理了事件
+  private func processMouseEvent(_ callback: ((_ point: NSPoint) -> Void)? = nil) -> Bool {
+    guard let contentView = window.contentView else { return false }
+    
+    // 获取鼠标在屏幕中的位置
+    let screenLocation = NSEvent.mouseLocation
+    
+    // 转换为窗口坐标系（左下角为原点）
+    let windowLocation = window.convertPoint(fromScreen: screenLocation)
+    
+    // 转换为内容视图坐标系
+    let viewLocation = contentView.convert(windowLocation, from: nil)
+    
+    // 翻转Y轴，使坐标系原点位于左上角（Flutter使用的坐标系）
+    let flippedY = contentView.bounds.height - viewLocation.y
+    let point = CGPoint(x: viewLocation.x, y: flippedY)
+    
+    // 检查鼠标是否在窗口内部
+    if point.x < 0 || point.x > window.frame.width || 
+       point.y < 0 || point.y > window.frame.height {
+      return false
+    }
+    
+    // 调用回调函数（如果提供）
+    callback?(windowLocation)
+    
+    // 通过Flutter通道发送悬停事件
+    emitEvent("hover", args: ["x": point.x, "y": point.y])
+    
+    return true
+  }
+  
+  /// 立即发送当前鼠标位置的悬停事件
+  /// - Parameter callback: 可选的回调函数
+  private func sendHoverEvent(_ callback: ((_ point: NSPoint) -> Void)? = nil) {
+    _ = processMouseEvent(callback)
   }
   
   /// 移除鼠标悬停事件监听
   /// - Parameter id: 要移除的监听器ID
-  public func removeListenHover(_ id: Int64) {
-    if let index = hoverIds.firstIndex(of: id) {
+  public func removeHoverListener(_ id: Int64?) {
+    if (id == nil) {
+      hoverIds.removeAll()
+      if let event = moveEvent {
+        NSEvent.removeMonitor(event)
+        moveEvent = nil
+      }
+      return
+    }
+    if let index = hoverIds.firstIndex(of: id!) {
       hoverIds.remove(at: index)
     }
     if nil != moveEvent && hoverIds.count == 0 {
@@ -520,21 +571,21 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   
   /// 添加预平移事件监听
   /// - Parameter id: 监听器ID
-  public func addPreListenPan(_ id: Int64) {
-    addListenHover(id) { point in
+  public func addPrePanListener(_ id: Int64) {
+    addHoverListener(id) { point in
       self.panStartPoint = point
     }
   }
   
   /// 移除预平移事件监听
   /// - Parameter id: 要移除的监听器ID
-  public func removePreListenPan(_ id: Int64) {
-    removeListenHover(id)
+  public func removePrePanListener(_ id: Int64) {
+    removeHoverListener(id)
   }
   
   /// 添加平移事件监听
   /// - Returns: 包含初始位置信息的字典
-  public func addListenPan() -> [String: CGFloat] {
+  public func addPanListener() -> [String: CGFloat] {
     panEvent = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
       var windowLocation: CGPoint
       if self.panStartPoint == nil {
@@ -568,7 +619,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   }
   
   /// 移除平移事件监听
-  public func removeListenPan() {
+  public func removePanListener() {
     if panEvent != nil {
       NSEvent.removeMonitor(panEvent!)
       panEvent = nil
@@ -612,8 +663,8 @@ extension ChooWindowManager {
   private struct AssociatedKeys {
     /// 是否允许关闭窗口的标记
     static var allowClosing: Bool? = nil
-    /// 是否允许缩小窗口的标记
-    static var AllowShrinking: Bool? = nil
+    
+    static var AllowKeyboard = UnsafeRawPointer(bitPattern: "AllowKeyboard".hashValue)!
   }
   /// 控制窗口是否允许关闭的属性
   var allowClosing: Bool? {
@@ -624,12 +675,21 @@ extension ChooWindowManager {
       objc_setAssociatedObject(self, &AssociatedKeys.allowClosing, value, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
+  
+  var AllowKeyboard: NSEvent? {
+    get {
+      return objc_getAssociatedObject(self, &AssociatedKeys.AllowKeyboard) as? NSEvent
+    }
+    set(value) {
+      objc_setAssociatedObject(self, &AssociatedKeys.AllowKeyboard, value, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+  }
   /// 发送窗口事件
   /// - Parameters:
   ///   - eventName: 事件名称
   ///   - args: 事件参数
   ///   - callback: 事件处理完成的回调函数
-  public func emitEvent(_ eventName: String, args: [String: Any]?, callback: ((_ id: Int64, _ args: Any?) -> Void)? = nil) {
+  public func emitEvent(_ eventName: String, args: [String: Any?]?, callback: ((_ id: Int64, _ args: Any?) -> Void)? = nil) {
     if !listener {
       return
     }
@@ -684,12 +744,18 @@ extension ChooWindowManager {
   /// 处理窗口成为主窗口事件
   /// - Parameter notification: 通知对象
   public func windowDidBecomeMain(_ notification: Notification) {
+    // 窗口获得焦点时添加键盘快捷键监听（Command+W关闭窗口）
+    addKeyboardEvent()
+    // 发送窗口获得焦点事件
     emitEvent("focus", args: nil);
   }
   
   /// 处理窗口失去主窗口状态事件
   /// - Parameter notification: 通知对象
   public func windowDidResignMain(_ notification: Notification) {
+    // 窗口失去焦点时移除键盘快捷键监听，避免影响其他窗口
+    removeKeyboardEvent()
+    // 发送窗口失去焦点事件
     emitEvent("blur", args: nil);
   }
   
@@ -749,7 +815,127 @@ extension ChooWindowManager {
   /// 处理窗口即将关闭事件
   /// - Parameter notification: 通知对象
   public func windowWillClose(_ notification: Notification) {
+    // 清理所有事件监听器
+    removeKeyboardEvent()
+    removeHoverListener(nil)
+    
+    // 发送窗口关闭事件通知
     emitEvent("close", args: nil)
   }
+    
+  /// 添加键盘事件监听器
+  /// 
+  /// 为当前窗口添加键盘事件监听功能，捕获所有按键事件并进行处理
+  /// 主要功能包括：
+  /// 1. 将键盘事件通过Flutter通道传递给Dart端
+  /// 2. 支持自定义键盘事件处理逻辑
+  /// 3. 实现标准的窗口快捷键（如Command+W关闭窗口）
+  private func addKeyboardEvent() {
+    // 确保不重复添加监听器
+    if keyboardEventMonitor != nil {
+      removeKeyboardEvent()
+    }
+    
+    // 添加本地事件监听器，仅捕获按键事件
+//    keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+//      guard let self = self else { return event }
+//      
+//      // 检测Command+W组合键（W键的键码为13）
+//      if event.modifierFlags.contains(.command) && event.keyCode == 13 {
+//        // 执行窗口关闭操作
+//        self.close()
+//        return nil // 消耗事件，阻止事件继续传递
+//      }
+//      
+//      // 其他按键事件正常传递
+//      return event
+//    }
+    
+    keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+      guard let self = self else { return event }
+      
+      // 如果没有待处理的键盘事件，则处理当前事件
+      if self.AllowKeyboard == nil {
+        // 收集所有激活的修饰键
+        var modifierFlags: [String] = []
+        if event.modifierFlags.contains(.shift) {
+          modifierFlags.append("shift")
+        }
+        if event.modifierFlags.contains(.control) {
+          modifierFlags.append("control")
+        }
+        if event.modifierFlags.contains(.option) {
+          modifierFlags.append("option")
+        } // 对应 Alt/⌥
+        if event.modifierFlags.contains(.command) {
+          modifierFlags.append("command")
+        } // ⌘
+        if event.modifierFlags.contains(.capsLock) {
+          modifierFlags.append("capsLock")
+        }
+        if event.modifierFlags.contains(.function) {
+          modifierFlags.append("function")
+        } // Fn
+        if event.modifierFlags.contains(.numericPad) {
+          modifierFlags.append("numericPad")
+        }
+        if event.modifierFlags.contains(.help) {
+          modifierFlags.append("help")
+        }
+        if event.modifierFlags.contains(.deviceIndependentFlagsMask) {
+          modifierFlags.append("deviceIndependentFlagsMask")
+        }
+        
+        // 通过Flutter通道发送键盘事件到Dart端
+        // 包含按键码、修饰键状态、字符信息等完整数据
+        emitEvent(
+          "keyboard",
+          args: [
+            "keyCode": event.keyCode,
+            "modifierFlags": modifierFlags,
+            "characters": event.characters,
+            "charactersIgnoringModifiers": event.charactersIgnoringModifiers
+          ],
+          callback: { id, args in
+            // 如果Dart端返回true，则允许事件继续传递
+            if args as! Bool {
+              self.AllowKeyboard = event
+              NSApp.sendEvent(event)
+            }
+            // 否则事件被拦截，不再传递
+          }
+        )
+        return nil // 暂时拦截事件，等待Dart端处理结果
+      }
+      
+      // 清除待处理的键盘事件标记
+      self.AllowKeyboard = nil
+      
+      // 处理标准快捷键：Command+W关闭窗口（W键的键码为13）
+      if event.modifierFlags.contains(.command) && event.keyCode == 13 {
+        // 执行窗口关闭操作
+        self.close()
+        return nil // 消耗事件，阻止事件继续传递
+      }
+      
+      // 其他按键事件正常传递
+      return event
+    }
+  }
   
+  /// 移除键盘事件监听器
+  /// 
+  /// 在以下情况下调用此方法：
+  /// 1. 窗口关闭时
+  /// 2. 窗口失去焦点时
+  /// 3. 不再需要监听键盘事件时
+  /// 
+  /// 移除监听器可以避免内存泄漏和不必要的事件处理
+  private func removeKeyboardEvent() {
+    // 移除键盘事件监听器并释放资源
+    if let monitor = keyboardEventMonitor {
+      NSEvent.removeMonitor(monitor)
+      keyboardEventMonitor = nil
+    }
+  }
 }

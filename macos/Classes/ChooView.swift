@@ -64,6 +64,24 @@ open class ChooFlutterViewController: FlutterViewController {
 /// - Parameter args: 包含窗口创建参数的字典
 /// - Returns: 新创建窗口的ID，如果创建失败则返回nil
 func createWindow(args: [String: Any]) -> Int64? {
+//  if (ChooWindowManager.windowMap.keys.count > 1) {
+//    // 创建一个Command+W组合键事件
+//    let event = NSEvent.keyEvent(
+//        with: .keyDown,                // 事件类型：按键按下
+//        location: NSPoint.zero,        // 事件位置
+//        modifierFlags: [.command],       // 修饰键：Command
+//        timestamp: ProcessInfo.processInfo.systemUptime,
+//        windowNumber: 0,
+//        context: nil,
+//        characters: "w",               // 字符
+//        charactersIgnoringModifiers: "w",
+//        isARepeat: false,
+//        keyCode: 13                    // W键的键码是13
+//    )
+//    NSApp.sendEvent(event!)
+//
+//    return nil
+//  }
   if let RegisterGeneratedPlugins = ChooWindowManagerPlugin.RegisterGeneratedPlugins {
     let beforeWindowId: Int64 = args["beforeWindowId"] as! Int64
     let project = FlutterDartProject()

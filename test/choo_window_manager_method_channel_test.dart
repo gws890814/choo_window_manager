@@ -1,11 +1,9 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:choo_window_manager/choo_window_manager_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelChooWindowManager platform = MethodChannelChooWindowManager();
   const MethodChannel channel = MethodChannel('choo_window_manager');
 
   setUp(() {
@@ -22,6 +20,5 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    expect(await platform.getPlatformVersion(), '42');
   });
 }

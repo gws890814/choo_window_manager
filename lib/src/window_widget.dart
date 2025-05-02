@@ -26,22 +26,27 @@ class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanStart: (details) {
-        WindowManagerEvent.addListenPan(this);
+        WindowManagerEvent.addPanListener(this);
       },
       onPanEnd: (details) {
-        WindowManagerEvent.removeListenPan(this);
+        WindowManagerEvent.removePanListener(this);
       },
       onPanCancel: () {
-        WindowManagerEvent.removeListenPan(this);
+        WindowManagerEvent.removePanListener(this);
       },
       child: MouseRegion(
         onEnter: (event) {
-          WindowManagerEvent.addPreListenPan(this);
+          WindowManagerEvent.addPrePanListener(this);
         },
         onExit: (event) {
-          WindowManagerEvent.removePreListenPan(this);
+          WindowManagerEvent.removePrePanListener(this);
         },
-        child: widget.child,
+        child: GestureDetector(
+          onPanStart: (details) {},
+          onPanEnd: (details) {},
+          onPanCancel: () {},
+          child: widget.child,
+        ),
       ),
     );
   }

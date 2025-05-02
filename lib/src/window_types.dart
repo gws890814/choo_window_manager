@@ -25,6 +25,45 @@ extension WindowAnimationBehaviorExtension on WindowAnimationBehavior {
   }
 }
 
+enum ModifierFlags {
+  capsLock,
+  shift,
+  control,
+  option,
+  command,
+  numericPad,
+  help,
+  function,
+  deviceIndependentFlagsMask
+}
+
+extension ModifierFlagsExtension on ModifierFlags {
+  static ModifierFlags fromString(String? flag) {
+    switch (flag) {
+      case 'capsLock':
+        return ModifierFlags.capsLock;
+      case 'shift':
+        return ModifierFlags.shift;
+      case 'control':
+        return ModifierFlags.control;
+      case 'option':
+        return ModifierFlags.option;
+      case 'command':
+        return ModifierFlags.command;
+      case 'numericPad':
+        return ModifierFlags.numericPad;
+      case 'help':
+        return ModifierFlags.help;
+      case 'function':
+        return ModifierFlags.function;
+      case 'deviceIndependentFlagsMask':
+        return ModifierFlags.deviceIndependentFlagsMask;
+      default:
+        return ModifierFlags.deviceIndependentFlagsMask;
+    }
+  }
+}
+
 /// 窗口标题栏可见性的枚举类型
 ///
 /// [hidden] - 隐藏标题栏
@@ -53,6 +92,7 @@ enum WindowEventType {
   willLeaveFullScreen,
   didLeaveFullScreen,
   event,
+  keyboard
 }
 
 extension WindowTitleVisibilityExtension on WindowTitleVisibility {
@@ -182,4 +222,38 @@ class WindowEmit<T> {
   final String method;
   T result;
   WindowEmit(this.id, this.method, {required this.result});
+}
+
+/// 键盘事件类
+///
+/// 用于表示和处理键盘输入事件，包含按键代码、修饰键状态和字符信息
+/// 与macOS原生键盘事件对应，提供跨平台的键盘事件处理能力
+class KeyboardEvent {
+  /// 按下的修饰键列表
+  ///
+  /// 可能包含的值有：capsLock, shift, control, option, command等
+  final List<ModifierFlags> modifierFlags;
+  
+  /// 按键产生的字符
+  ///
+  /// 考虑当前键盘布局和修饰键状态下产生的实际字符
+  final String? characters;
+  
+  /// 忽略修饰键状态下按键产生的字符
+  ///
+  /// 不考虑shift等修饰键的影响，返回键位对应的基本字符
+  final String? charactersIgnoringModifiers;
+  
+  /// 按键的键码值
+  ///
+  /// 对应于物理键盘上的特定按键，与操作系统相关
+  final int keyCode;
+  
+  /// 创建一个键盘事件实例
+  ///
+  /// [keyCode] - 必需参数，指定按键的键码
+  /// [modifierFlags] - 可选参数，指定按下的修饰键列表，默认为空列表
+  /// [characters] - 可选参数，指定按键产生的字符
+  /// [charactersIgnoringModifiers] - 可选参数，指定忽略修饰键状态下按键产生的字符
+  KeyboardEvent({required this.keyCode, this.modifierFlags = const [], this.characters, this.charactersIgnoringModifiers});
 }

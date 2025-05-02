@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
@@ -20,12 +19,13 @@ void main(List<dynamic> args) async {
     ),
     (window) async {
       await window.show();
+      // await window.focus();
       // Offset position = await window.getPosition();
       // print(position);
       // position = await window.getPosition();
-      // await window.setPosition(Offset(0, 0), global: false);
+      // await window.setPosition(Offset(0, 0), global: true);
       // await window.setBounds(Rect.fromLTWH(0, 0, 200, 300), global: false);
-      window.setTitle("title");
+      // window.setTitle("title");
     },
   );
   // // await the initialization of the plugin.
@@ -65,7 +65,18 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 
   @override
   Future<bool> onWillClose() async {
-    return false;
+    print("这里第一次触发了关闭窗口的回调， 嘿！让你关！");
+    return true;
+  }
+
+  @override
+  Future<bool> onKeyboard(event) async {
+    // TODO: implement onKeyboard
+    if (event.keyCode == 13 && event.modifierFlags.contains(ModifierFlags.command)) {
+      print('捕捉到了关闭，让他往下走');
+      // return false;
+    }
+    return true;
   }
 
   @override
@@ -100,6 +111,16 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
 
   @override
   Future<bool> onWillClose() async {
+    print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！");
+    return false;
+  }
+
+  @override
+  Future<bool> onKeyboard(event) async {
+    // TODO: implement onKeyboard
+    if (event.keyCode == 13 && event.modifierFlags.contains(ModifierFlags.command)) {
+      print('第二次捕捉到了模拟关闭，让他往下走');
+    }
     return true;
   }
 
@@ -150,11 +171,12 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
         body: WindowPanWidget(
           child: SizedBox(
             child: GestureDetector(
-              onPanStart: (details) {},
-              onPanEnd: (details) {},
-              onPanCancel: () {},
               onTap: () async {
-                await ChooWindowManager.createWindow(null);
+                // if (ChooWindowManager.current.id == 0) {
+                  await ChooWindowManager.createWindow(null);
+                // } else {
+                  // await ChooWindowManager.createWindow(null);
+                // }
               },
               child: Center(child: Text('Running on: $_platformVersion')),
             ),

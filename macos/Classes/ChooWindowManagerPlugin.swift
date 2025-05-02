@@ -121,7 +121,7 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       break
     case "close":
       /// 关闭窗口
-      wManager.close()
+      wManager.close(args["force"] as? Bool ?? false)
       result(nil)
       break
     case "isVisible":
@@ -274,37 +274,37 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       /// 获取鼠标位置
       result(wManager.getMousePoint())
       break
-    case "addListenPan":
+    case "addPanListener":
       /// 添加平移事件监听器
-      result(wManager.addListenPan())
+      result(wManager.addPanListener())
       break
-    case "removeListenPan":
+    case "removePanListener":
       /// 移除平移事件监听器
-      wManager.removeListenPan()
+      wManager.removePanListener()
       result(nil)
       break
-    case "addListenHover":
+    case "addHoverListener":
       /// 添加悬停事件监听器
       let eventid: Int64 = args["eventid"] as! Int64
-      wManager.addListenHover(eventid)
+      wManager.addHoverListener(eventid)
       result(nil)
       break
-    case "removeListenHover":
+    case "removeHoverListener":
       /// 移除悬停事件监听器
       let eventid: Int64 = args["eventid"] as! Int64
-      wManager.removeListenHover(eventid)
+      wManager.removeHoverListener(eventid)
       result(nil)
       break
-    case "addPreListenPan":
+    case "addPrePanListener":
       /// 添加预平移事件监听器
       let eventid: Int64 = args["eventid"] as! Int64
-      wManager.addPreListenPan(eventid)
+      wManager.addPrePanListener(eventid)
       result(nil)
       break
-    case "removePreListenPan":
+    case "removePrePanListener":
       /// 移除预平移事件监听器
       let eventid: Int64 = args["eventid"] as! Int64
-      wManager.removePreListenPan(eventid)
+      wManager.removePrePanListener(eventid)
       result(nil)
       break
     case "emit":
