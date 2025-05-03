@@ -149,26 +149,6 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
-  static void addKeyboardListener(WindowManagerEvent instance) {
-    if (_keyboardEventList.contains(instance)) {
-      _keyboardEventList.remove(instance);
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'addKeyboardListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
-    }
-  }
-
-  static void removeKeyboardListener(WindowManagerEvent instance) {
-    if (_keyboardEventList.contains(instance)) {
-      _keyboardEventList.remove(instance);
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removeKeyboardListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
-    }
-  }
-
   /// 事件监听器的唯一标识符，基于创建时的时间戳
   final int _id = DateTime.now().microsecondsSinceEpoch;
 
@@ -312,7 +292,12 @@ class ChooWindowManager {
       dynamic onEventValue;
       KeyboardEvent? keyboardEvent;
       if (method == 'keyboard') {
-        List<ModifierFlags> modifierFlags = (arguments["modifierFlags"] as List<Object?>).cast<String>().toList().map((e) => ModifierFlagsExtension.fromString(e)).toList();
+        List<ModifierFlags> modifierFlags =
+            (arguments["modifierFlags"] as List<Object?>)
+                .cast<String>()
+                .toList()
+                .map((e) => ModifierFlagsExtension.fromString(e))
+                .toList();
         keyboardEvent = KeyboardEvent(
           keyCode: arguments['keyCode'],
           modifierFlags: modifierFlags,
@@ -498,10 +483,7 @@ extension ChooCurrentWindowManager on ChooWindowManager {
   ///
   /// 窗口将被完全关闭，如果需要阻止关闭，请使用[WindowManagerEvent.onWillClose]
   Future<void> close({bool force = false}) async {
-    await _windowChannel.invokeMethod<void>('close', {
-      ...args,
-      "force": force,
-    });
+    await _windowChannel.invokeMethod<void>('close', {...args, "force": force});
   }
 
   /// 检查窗口是否可见

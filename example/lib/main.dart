@@ -14,7 +14,7 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       // offset: Offset(0, 0),
       // size: Size(500, 300),
-      animationBehavior: WindowAnimationBehavior.documentWindow,
+      // animationBehavior: WindowAnimationBehavior.documentWindow,
       // titleBarStyle: WindowTitleVisibility.hidden,
     ),
     (window) async {
@@ -72,7 +72,8 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
   @override
   Future<bool> onKeyboard(event) async {
     // TODO: implement onKeyboard
-    if (event.keyCode == 13 && event.modifierFlags.contains(ModifierFlags.command)) {
+    if (event.keyCode == 13 &&
+        event.modifierFlags.contains(ModifierFlags.command)) {
       print('捕捉到了关闭，让他往下走');
       // return false;
     }
@@ -118,7 +119,8 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
   @override
   Future<bool> onKeyboard(event) async {
     // TODO: implement onKeyboard
-    if (event.keyCode == 13 && event.modifierFlags.contains(ModifierFlags.command)) {
+    if (event.keyCode == 13 &&
+        event.modifierFlags.contains(ModifierFlags.command)) {
       print('第二次捕捉到了模拟关闭，让他往下走');
     }
     return true;
@@ -173,9 +175,9 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
             child: GestureDetector(
               onTap: () async {
                 // if (ChooWindowManager.current.id == 0) {
-                  await ChooWindowManager.createWindow(null);
+                await ChooWindowManager.createWindow(null);
                 // } else {
-                  // await ChooWindowManager.createWindow(null);
+                // await ChooWindowManager.createWindow(null);
                 // }
               },
               child: Center(child: Text('Running on: $_platformVersion')),
