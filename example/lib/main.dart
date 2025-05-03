@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
 
-ChooWindowManager? windowManager;
-
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   int windowId = int.parse(args[0]);
-  windowManager = ChooWindowManager.ready(
+  ChooWindowManager.ready(
     ChooWindowOptions(
       windowId,
       title: "测试一下",
