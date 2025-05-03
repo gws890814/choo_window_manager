@@ -7,7 +7,14 @@
 
 import FlutterMacOS
 
+/// NSWindow的扩展，提供窗口初始化时的隐藏功能
+///
+/// 该扩展主要用于控制窗口在启动时的可见性，防止窗口闪烁。
 extension NSWindow {
+  /// 在窗口启动时隐藏窗口
+  ///
+  /// 该方法确保窗口在初始化过程中保持隐藏状态，直到准备就绪。
+  /// 它会检查窗口管理器的初始化状态，避免重复设置。
   public func hiddenWindowAtLaunch() {
     if delegate is ChooWindowManager && (delegate as! ChooWindowManager).isInit {
       return;
@@ -19,19 +26,39 @@ extension NSWindow {
   }
 }
 
+/// 自定义窗口类，继承自NSWindow
+///
+/// ChooWindow提供了与ChooWindowManager的集成，支持窗口标识和自定义行为。
 class ChooWindow: NSWindow {
+  /// 窗口的唯一标识符
+  ///
+  /// 通过窗口管理器获取的唯一ID，用于在多窗口环境中识别特定窗口。
   public var windowId: Int64? {
     get {
       return (delegate as? ChooWindowManager)?.windowId
     }
   }
   
+  /// 初始化一个新的ChooWindow实例
+  ///
+  /// - Parameters:
+  ///   - contentRect: 窗口的内容区域
+  ///   - style: 窗口的样式掩码
+  ///   - backingStoreType: 窗口的背景存储类型
+  ///   - flag: 是否延迟窗口创建
   override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
     super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
     let chooWindowManager = ChooWindowManager(self)
     delegate = chooWindowManager
   }
   
+  /// 重写窗口排序方法
+  ///
+  /// 在窗口排序时确保正确处理窗口的可见性。
+  /// 
+  /// - Parameters:
+  ///   - place: 窗口的排序模式
+  ///   - otherWin: 相对窗口的标识符
   override public func order(_ place: NSWindow.OrderingMode, relativeTo otherWin: Int) {
       super.order(place, relativeTo: otherWin)
       hiddenWindowAtLaunch()
@@ -39,8 +66,17 @@ class ChooWindow: NSWindow {
 }
 
 /// Flutter视图控制器，用于管理窗口的Flutter内容
+/// Flutter视图控制器，用于管理窗口的Flutter内容
+///
+/// 该类扩展了FlutterViewController，添加了窗口ID的支持，
+/// 使其能够与窗口管理系统集成。
 open class ChooFlutterViewController: FlutterViewController {
+  /// 内部存储的窗口ID
   private var _windowId: Int64?
+  
+  /// 视图控制器关联的窗口ID
+  ///
+  /// 用于标识该视图控制器所属的窗口，默认为0
   public var windowId: Int64 {
     get {
       return _windowId ?? 0
@@ -51,6 +87,12 @@ open class ChooFlutterViewController: FlutterViewController {
   }
 }
 
+/// 创建一个新的窗口
+///
+/// 该函数负责创建和配置新的ChooWindow实例，设置其Flutter内容和初始属性。
+///
+/// - Parameter args: 包含窗口创建参数的字典
+/// - Returns: 新创建窗口的ID，如果创建失败则返回nil
 func createWindow(args: [String: Any]) -> Int64? {
   if let RegisterGeneratedPlugins = ChooWindowManagerPlugin.RegisterGeneratedPlugins {
     let beforeWindowId: Int64 = args["beforeWindowId"] as! Int64
@@ -91,6 +133,9 @@ func createWindow(args: [String: Any]) -> Int64? {
   return nil
 }
 
+/// 关闭指定的窗口或所有窗口
+///
+/// - Parameter windowIds: 要关闭的窗口ID数组，如果为nil则关闭所有窗口
 func closeWindows(_ windowIds: [Int64]?) {
   for id in (windowIds ?? Array(ChooWindowManager.windowMap.keys)) {
     if let wManager = ChooWindowManager.windowMap[id] {
