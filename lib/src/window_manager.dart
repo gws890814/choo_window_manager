@@ -1,5 +1,8 @@
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
+
+const uuid = Uuid();
 
 /// 窗口管理器事件抽象类，用于处理窗口相关的事件
 abstract mixin class WindowManagerEvent {
@@ -141,11 +144,11 @@ abstract mixin class WindowManagerEvent {
   }
 
   /// 事件监听器的唯一标识符，使用当前时间戳生成。
-  final int _id = DateTime.now().microsecondsSinceEpoch;
+  final String _id = uuid.v4();
 
   /// 获取事件监听器的唯一标识符。
   /// @return 事件监听器的唯一标识符，类型为int。
-  int get eventid => _id;
+  String get eventid => _id;
 
   /// 窗口尺寸变化回调。
   /// @param size 新的窗口尺寸。

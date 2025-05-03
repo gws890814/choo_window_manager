@@ -88,7 +88,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   private var panStartPoint: CGPoint? = nil
   
   /// 悬停事件ID列表
-  private var hoverIds: [Int64] = []
+  private var hoverIds: [String] = []
   
   /// 键盘事件监听器
   private var keyboardEventMonitor: Any? = nil
@@ -775,7 +775,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 2. 移除已存在的移动事件监听器（如果有）
   /// 3. 发送初始悬停事件
   /// 4. 创建新的本地事件监听器来处理鼠标移动
-  public func addHoverListener(_ id: Int64, _ callback: ((_ point: NSPoint) -> Void)? = nil) {
+  public func addHoverListener(_ id: String, _ callback: ((_ point: NSPoint) -> Void)? = nil) {
     if !hoverIds.contains(id) {
       hoverIds.append(id)
     }
@@ -866,7 +866,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 1. 如果ID为nil，移除所有监听器
   /// 2. 如果提供了特定ID，只移除该ID的监听器
   /// 3. 当没有剩余监听器时，清理事件监听器资源
-  public func removeHoverListener(_ id: Int64?) {
+  public func removeHoverListener(_ id: String?) {
     if (id == nil) {
       hoverIds.removeAll()
       if let event = moveEvent {
@@ -896,7 +896,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 1. 监听鼠标移动
   /// 2. 记录鼠标位置作为拖拽的起始点
   /// 3. 为后续的拖拽操作提供参考点
-  public func addPrePanListener(_ id: Int64) {
+  public func addPrePanListener(_ id: String) {
     addHoverListener(id) { point in
       self.panStartPoint = point
     }
@@ -908,7 +908,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
 ///
 /// 该方法用于移除之前添加的预拖拽事件监听器
 /// 通过调用removeHoverListener来清理相关的事件监听
-public func removePrePanListener(_ id: Int64) {
+public func removePrePanListener(_ id: String) {
     removeHoverListener(id)
   }
   

@@ -341,28 +341,28 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
     case "addHoverListener":
       // 添加鼠标悬停事件监听器
       // - eventid: 事件ID
-      let eventid: Int64 = args["eventid"] as! Int64
+      let eventid: String = args["eventid"] as! String
       wManager.addHoverListener(eventid)
       result(nil)
       break
     case "removeHoverListener":
       // 移除鼠标悬停事件监听器
       // - eventid: 事件ID
-      let eventid: Int64 = args["eventid"] as! Int64
+      let eventid: String = args["eventid"] as! String
       wManager.removeHoverListener(eventid)
       result(nil)
       break
     case "addPrePanListener":
       // 添加拖拽预处理事件监听器
       // - eventid: 事件ID
-      let eventid: Int64 = args["eventid"] as! Int64
+      let eventid: String = args["eventid"] as! String
       wManager.addPrePanListener(eventid)
       result(nil)
       break
     case "removePrePanListener":
       // 移除拖拽预处理事件监听器
       // - eventid: 事件ID
-      let eventid: Int64 = args["eventid"] as! Int64
+      let eventid: String = args["eventid"] as! String
       wManager.removePrePanListener(eventid)
       result(nil)
       break
