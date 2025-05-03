@@ -1,6 +1,7 @@
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter/services.dart';
 
+/// 窗口管理器事件抽象类，用于处理窗口相关的事件
 abstract mixin class WindowManagerEvent {
   static final List<WindowManagerEvent> _eventList = [];
 
@@ -8,6 +9,8 @@ abstract mixin class WindowManagerEvent {
 
   static WindowManagerEvent? _instance;
 
+  /// 添加事件监听器
+  /// @param instance 要添加的事件监听器实例
   static void addListener(WindowManagerEvent instance) {
     if (!_eventList.contains(instance)) {
       _eventList.add(instance);
@@ -20,6 +23,8 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 移除事件监听器
+  /// @param instance 要移除的事件监听器实例
   static void removeListener(WindowManagerEvent instance) {
     if (_eventList.contains(instance)) {
       _eventList.remove(instance);
@@ -32,6 +37,9 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 添加拖拽事件监听器
+  /// @param instance 要添加的拖拽事件监听器实例
+  /// @throws AssertionError 如果已经存在监听器
   static void addPanListener(WindowManagerEvent instance) {
     assert(_instance == null, 'Only one listener is allowed');
     _instance = instance;
@@ -45,6 +53,8 @@ abstract mixin class WindowManagerEvent {
         });
   }
 
+  /// 移除拖拽事件监听器
+  /// @param instance 要移除的拖拽事件监听器实例
   static void removePanListener(WindowManagerEvent instance) {
     if (_instance == instance) {
       _instance = null;
@@ -55,6 +65,8 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 添加预拖拽事件监听器
+  /// @param instance 要添加的预拖拽事件监听器实例
   static void addPrePanListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
@@ -65,6 +77,8 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 移除预拖拽事件监听器
+  /// @param instance 要移除的预拖拽事件监听器实例
   static void removePrePanListener(WindowManagerEvent instance) {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
@@ -75,6 +89,8 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 添加悬停事件监听器
+  /// @param instance 要添加的悬停事件监听器实例
   static void addHoverListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
@@ -85,6 +101,8 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 移除悬停事件监听器
+  /// @param instance 要移除的悬停事件监听器实例
   static void removeHoverListener(WindowManagerEvent instance) {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
@@ -95,8 +113,11 @@ abstract mixin class WindowManagerEvent {
     }
   }
 
+  /// 事件监听器的唯一标识符，使用当前时间戳生成
   final int _id = DateTime.now().microsecondsSinceEpoch;
 
+  /// 获取事件监听器的唯一标识符
+  /// @return 事件监听器的唯一标识符
   int get eventid => _id;
 
   void onResize(Size size) {}
