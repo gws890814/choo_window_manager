@@ -1327,7 +1327,7 @@ extension ChooWindowManager {
             "charactersIgnoringModifiers": event.charactersIgnoringModifiers
           ],
           callback: { id, args in
-            if args as! Bool {
+            if args as? Bool ?? true {
               self.AllowKeyboard = event
               NSApp.sendEvent(event)
             }

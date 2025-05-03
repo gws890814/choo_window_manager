@@ -14,7 +14,7 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       // offset: Offset(0, 0),
       // size: Size(500, 300),
-      // animationBehavior: WindowAnimationBehavior.documentWindow,
+      animationBehavior: WindowAnimationBehavior.documentWindow,
       // titleBarStyle: WindowTitleVisibility.hidden,
     ),
     (window) async {
@@ -65,7 +65,7 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 
   @override
   Future<bool> onWillClose() async {
-    print("这里第一次触发了关闭窗口的回调， 嘿！让你关！");
+    print("这里第一次触发了关闭窗口的回调， 嘿！让你关！${ChooWindowManager.current.id}");
     return true;
   }
 
@@ -74,7 +74,7 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
     // TODO: implement onKeyboard
     if (event.keyCode == 13 &&
         event.modifierFlags.contains(ModifierFlags.command)) {
-      print('捕捉到了关闭，让他往下走');
+      print('捕捉到了关闭，让他往下走::${ChooWindowManager.current.id}');
       // return false;
     }
     return true;
@@ -112,7 +112,7 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
 
   @override
   Future<bool> onWillClose() async {
-    print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！");
+    print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
     return false;
   }
 
@@ -121,7 +121,7 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
     // TODO: implement onKeyboard
     if (event.keyCode == 13 &&
         event.modifierFlags.contains(ModifierFlags.command)) {
-      print('第二次捕捉到了模拟关闭，让他往下走');
+      print('第二次捕捉到了模拟关闭，让他往下走::${ChooWindowManager.current.id}');
     }
     return true;
   }

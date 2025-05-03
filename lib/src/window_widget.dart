@@ -8,10 +8,15 @@ class WindowPanWidget extends StatefulWidget {
   /// 子控件
   final Widget child;
 
+  /// 是否展开模式
+  /// 当为true时，child内的手势将不会影响阻止拖动
+  /// 当为false时（默认），child内的手势将影响阻止拖动
+  final bool spread;
+
   /// 构造函数
   /// @param key - 控件key
   /// @param child - 子控件
-  const WindowPanWidget({super.key, required this.child});
+  const WindowPanWidget({super.key, required this.child, this.spread = false});
 
   @override
   State<WindowPanWidget> createState() => _WindowPanState();
@@ -19,8 +24,30 @@ class WindowPanWidget extends StatefulWidget {
 
 /// 窗口拖动控件的状态管理类
 class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
+
+  /// 清理窗口拖动相关的监听器
+  /// 移除预拖动监听器(removePrePanListener)和拖动监听器(removePanListener)
+  @override
+  void dispose() {
+    super.dispose();
+    WindowManagerEvent.removePrePanListener(this);
+    WindowManagerEvent.removePanListener(this);
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    Widget child = widget.child;
+    if (!widget.spread) {
+      child = GestureDetector(
+        // 处理拖动手势事件，将阻止拖动行为
+        onPanStart: (details) {},
+        onPanEnd: (details) {},
+        onPanCancel: () {},
+        child: child,
+      );
+    }
+
     // 构建窗口拖动控件
     // 使用GestureDetector处理拖动手势
     return GestureDetector(
@@ -45,13 +72,7 @@ class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
         onExit: (event) {
           WindowManagerEvent.removePrePanListener(this);
         },
-        child: GestureDetector(
-          // 处理拖动手势事件
-          onPanStart: (details) {},
-          onPanEnd: (details) {},
-          onPanCancel: () {},
-          child: widget.child,
-        ),
+        child: child,
       ),
     );
   }

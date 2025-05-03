@@ -6,8 +6,12 @@ const uuid = Uuid();
 
 /// 窗口管理器事件抽象类，用于处理窗口相关的事件
 abstract mixin class WindowManagerEvent {
+  /// 窗口事件监听器列表
+  /// 用于存储所有窗口事件监听器实例
   static final List<WindowManagerEvent> _eventList = [];
 
+  /// 悬停/预拖拽事件监听器列表
+  /// 用于存储所有悬停和预拖拽事件监听器实例
   static final List<WindowManagerEvent> _hoverEventList = [];
 
   static WindowManagerEvent? _instance;
@@ -90,11 +94,13 @@ abstract mixin class WindowManagerEvent {
   static void addPrePanListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
-      // 通知原生端注册预拖拽监听
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'addPrePanListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
+      if (_hoverEventList.length == 1) {
+        // 通知原生端注册预拖拽监听
+        ChooWindowManager.current._windowChannel.invokeMethod<void>(
+          'addPrePanListener',
+          {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+        );
+      }
     }
   }
 
@@ -106,10 +112,12 @@ abstract mixin class WindowManagerEvent {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
       // 通知原生端移除预拖拽监听
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removePrePanListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
+      if (_hoverEventList.isEmpty) {
+        ChooWindowManager.current._windowChannel.invokeMethod<void>(
+          'removePrePanListener',
+          {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+        );
+      }
     }
   }
 
@@ -120,11 +128,13 @@ abstract mixin class WindowManagerEvent {
   static void addHoverListener(WindowManagerEvent instance) {
     if (!_hoverEventList.contains(instance)) {
       _hoverEventList.add(instance);
-      // 通知原生端注册悬停监听
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'addHoverListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
+      if (_hoverEventList.length == 1) {
+        // 通知原生端注册悬停监听
+        ChooWindowManager.current._windowChannel.invokeMethod<void>(
+          'addHoverListener',
+          {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+        );
+      }
     }
   }
 
@@ -136,10 +146,12 @@ abstract mixin class WindowManagerEvent {
     if (_hoverEventList.contains(instance)) {
       _hoverEventList.remove(instance);
       // 通知原生端移除悬停监听
-      ChooWindowManager.current._windowChannel.invokeMethod<void>(
-        'removeHoverListener',
-        {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
-      );
+      if (_hoverEventList.isEmpty) {
+        ChooWindowManager.current._windowChannel.invokeMethod<void>(
+          'removeHoverListener',
+          {"id": ChooWindowManager.current.id, "eventid": instance.eventid},
+        );
+      }
     }
   }
 
