@@ -5,6 +5,9 @@ import 'package:flutter/widgets.dart';
 /// 窗口拖动控件，用于实现窗口的拖动功能
 /// 通过包裹子控件来实现拖动功能
 class WindowPanWidget extends StatefulWidget {
+  static of(BuildContext context) =>
+      context.findAncestorStateOfType<_WindowPanState>();
+
   /// 子控件
   final Widget child;
 
@@ -24,6 +27,26 @@ class WindowPanWidget extends StatefulWidget {
 
 /// 窗口拖动控件的状态管理类
 class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
+  bool? _spread;
+
+  bool get spread {
+    if (_spread == null) {
+      return widget.spread;
+    }
+    return _spread!;
+  }
+
+  set spread(bool? value) {
+    setState(() {
+      _spread = value;
+    });
+  }
+
+  @override
+  initState() {
+    super.initState();
+    spread = widget.spread;
+  }
 
   /// 清理窗口拖动相关的监听器
   /// 移除预拖动监听器(removePrePanListener)和拖动监听器(removePanListener)
@@ -36,9 +59,9 @@ class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
 
   @override
   Widget build(BuildContext context) {
-
     Widget child = widget.child;
-    if (!widget.spread) {
+
+    if (!spread) {
       child = GestureDetector(
         // 处理拖动手势事件，将阻止拖动行为
         onPanStart: (details) {},

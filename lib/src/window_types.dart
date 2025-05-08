@@ -160,6 +160,8 @@ enum WindowEventType {
 
   /// 键盘事件，当窗口接收到键盘输入时触发
   keyboard,
+
+  changeTitle,
 }
 
 extension WindowTitleVisibilityExtension on WindowTitleVisibility {

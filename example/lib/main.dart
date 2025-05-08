@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,11 +46,12 @@ void main(List<dynamic> args) async {
   // });
   // ChooWindowManager
   // print(await ChooWindowManager().getPlatformVersion());
-  runApp(MyApp());
+  runApp(MyApp(windowId: windowId));
 }
 
 class MyApp extends StatefulWidget with WindowManagerEvent {
-  MyApp({super.key}) {
+  int windowId;
+  MyApp({required this.windowId, super.key}) {
     WindowManagerEvent.addListener(this);
   }
 
@@ -84,11 +86,18 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 
 class _MyAppState extends State<MyApp> with WindowManagerEvent {
   final String _platformVersion = 'Unknown';
+  String title = '';
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
   void initState() {
     super.initState();
     WindowManagerEvent.addListener(this);
+    ChooWindowManager.current.getTitle().then((value) {
+      print(value);
+      setState(() {
+        title = value;
+      });
+    });
   }
 
   @override
@@ -109,9 +118,17 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
   void onMove(GlobalOffset offset) {}
 
   @override
+  void changeTitle(String title) {
+    super.changeTitle(title);
+    setState(() {
+      this.title = title;
+    });
+  }
+
+  @override
   Future<bool> onWillClose() async {
     print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
-    return false;
+    return true;
   }
 
   @override
@@ -163,22 +180,40 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
   //   });
   // }
 
+  //   The class 'InAppWebViewController' doesn't have an unnamed constructor.
+  // Try using one of the named constructors defined in 'InAppWebViewController'.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: const Text('Plugin example app')),
-        body: WindowPanWidget(
-          child: SizedBox(
-            child: GestureDetector(
-              onTap: () async {
-                // if (ChooWindowManager.current.id == 0) {
-                await ChooWindowManager.createWindow(null);
-                // } else {
-                // await ChooWindowManager.createWindow(null);
-                // }
-              },
-              child: Center(child: Text('Running on: $_platformVersion')),
+        // appBar: AppBar(title: const Text('Plugin example app')),
+        appBar: ChooAppBar(
+          height: 30,
+          child: Builder(
+            builder: (context) {
+              return Container(
+                height: double.infinity,
+                color: Colors.red,
+                child: Center(
+                  child: MouseRegion(
+                    child: Text(title),
+                    onEnter: (event) {
+                      ChooAppBar.of(context)?.spread = false;
+                    },
+                    onExit: (event) {
+                      ChooAppBar.of(context)?.spread = true;
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        body: InAppWebView(
+          initialUrlRequest: URLRequest(
+            url: WebUri(
+              "https://blog.csdn.net/qq_42111674/article/details/141574656",
             ),
           ),
         ),

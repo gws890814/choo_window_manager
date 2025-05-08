@@ -114,6 +114,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     DispatchQueue.main.async {
       NSApp.activate(ignoringOtherApps: true)
       self.window.makeKeyAndOrderFront(nil)
+      print("~~~ssssssss")
       self.emitEvent("show", args: nil)
     }
   }
@@ -570,6 +571,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func setTitle(args: [String: Any]) {
     let title: String = args["title"] as? String ?? ""
     window.title = title
+    emitEvent("changeTitle", args: ["title": title])
   }
   
   /// 获取窗口的动画行为

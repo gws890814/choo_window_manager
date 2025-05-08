@@ -211,6 +211,8 @@ abstract mixin class WindowManagerEvent {
   /// 已离开全屏回调。
   void onDidLeaveFullScreen() {}
 
+  void changeTitle(String title) {}
+
   /// 窗口关闭前回调。
   /// @return 是否允许关闭，返回false可阻止关闭。
   Future<bool> onWillClose() => Future.value(true);
@@ -331,6 +333,7 @@ class ChooWindowManager {
           "didLeaveFullScreen": element.onDidLeaveFullScreen,
           "close": element.onClose,
           "keyboard": element.onKeyboard,
+          "changeTitle": element.changeTitle,
         };
         if (method == "resize") {
           Size size = Size(arguments['width'], arguments['height']);
@@ -370,6 +373,8 @@ class ChooWindowManager {
           } else if (WindowManagerEvent._eventList.last == element) {
             return true;
           }
+        } else if (method == 'changeTitle') {
+          eventMap[method]!(arguments['title'] ?? '');
         } else if (eventMap[method] != null) {
           eventMap[method]!();
         }
@@ -407,6 +412,7 @@ class ChooWindowManager {
       await setPosition(options.offset!);
     }
     await _windowChannel.invokeMethod<void>("windowReady", args);
+    print('success');
     callback(this);
   }
 
@@ -711,8 +717,8 @@ extension ChooCurrentWindowManager on ChooWindowManager {
   }
 
   /// 获取窗口标题。
-  Future<void> getTitle() async {
-    await _windowChannel.invokeMethod<void>('getTitle', args);
+  Future<String> getTitle() async {
+    return await _windowChannel.invokeMethod<String>('getTitle', args) ?? '';
   }
 
   /// 设置窗口标题。
