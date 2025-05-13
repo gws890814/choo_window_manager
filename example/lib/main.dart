@@ -50,7 +50,7 @@ void main(List<dynamic> args) async {
 }
 
 class MyApp extends StatefulWidget with WindowManagerEvent {
-  int windowId;
+  final int windowId;
   MyApp({required this.windowId, super.key}) {
     WindowManagerEvent.addListener(this);
   }
@@ -84,8 +84,9 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WindowManagerEvent {
-  final String _platformVersion = 'Unknown';
+class _MyAppState extends State<MyApp>
+    with WindowManagerEvent, WidgetsBindingObserver {
+  bool init = false;
   String title = '';
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
@@ -197,7 +198,12 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
                 color: Colors.red,
                 child: Center(
                   child: MouseRegion(
-                    child: Text(title),
+                    child: GestureDetector(
+                      child: Text(title),
+                      onTap: () async {
+                        print('click');
+                      },
+                    ),
                     onEnter: (event) {
                       ChooAppBar.of(context)?.spread = false;
                     },
@@ -211,11 +217,10 @@ class _MyAppState extends State<MyApp> with WindowManagerEvent {
           ),
         ),
         body: InAppWebView(
-          initialUrlRequest: URLRequest(
-            url: WebUri(
-              "https://blog.csdn.net/qq_42111674/article/details/141574656",
-            ),
+          initialSettings: InAppWebViewSettings(
+            javaScriptCanOpenWindowsAutomatically: true,
           ),
+          initialUrlRequest: URLRequest(url: WebUri("https://www.google.com")),
         ),
       ),
     );

@@ -114,7 +114,6 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     DispatchQueue.main.async {
       NSApp.activate(ignoringOtherApps: true)
       self.window.makeKeyAndOrderFront(nil)
-      print("~~~ssssssss")
       self.emitEvent("show", args: nil)
     }
   }

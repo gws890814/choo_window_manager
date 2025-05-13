@@ -1,3 +1,4 @@
+import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:choo_window_manager/src/widgets/pan.dart';
 import 'package:flutter/material.dart';
 
@@ -7,10 +8,20 @@ class ChooAppBar extends AppBar {
   ChooAppBar({required Widget child, double height = 50, super.key})
     : super(
         toolbarHeight: height,
-        title: SizedBox(
-          width: double.maxFinite,
-          height: height,
-          child: WindowPanWidget(spread: true, child: child),
+        title: GestureDetector(
+          onDoubleTap: () async {
+            bool isMaximized = await ChooWindowManager.current.isMaximized();
+            if (isMaximized) {
+              await ChooWindowManager.current.unmaximize();
+            } else {
+              await ChooWindowManager.current.maximize();
+            }
+          },
+          child: SizedBox(
+            width: double.maxFinite,
+            height: height,
+            child: WindowPanWidget(spread: true, child: child),
+          ),
         ),
         titleSpacing: 0,
         automaticallyImplyLeading: false,
