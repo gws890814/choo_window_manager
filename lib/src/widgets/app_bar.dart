@@ -1,9 +1,9 @@
-import 'package:choo_window_manager/choo_window_manager.dart';
-import 'package:flutter/material.dart';
+part of 'pan.dart';
 
 class ChooAppBar extends AppBar {
-  // set spread(bool? value) {}
-  static of(BuildContext context) => WindowPanWidget.of(context);
+  // ignore: library_private_types_in_public_api
+  static _WindowPanState? of(BuildContext context) =>
+      WindowPanWidget.of(context);
   ChooAppBar({required Widget child, double height = 50, super.key})
     : super(
         toolbarHeight: height,
