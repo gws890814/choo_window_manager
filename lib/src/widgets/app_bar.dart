@@ -1,5 +1,4 @@
 import 'package:choo_window_manager/choo_window_manager.dart';
-import 'package:choo_window_manager/src/widgets/pan.dart';
 import 'package:flutter/material.dart';
 
 class ChooAppBar extends AppBar {
