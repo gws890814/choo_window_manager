@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 /// 窗口拖动控件，用于实现窗口的拖动功能
 /// 通过包裹子控件来实现拖动功能
 class WindowPanWidget extends StatefulWidget {
+  // ignore: library_private_types_in_public_api
   static _WindowPanState? of(BuildContext context) =>
       context.findAncestorStateOfType<_WindowPanState>();
 
