@@ -3,4 +3,3 @@
 export 'src/window_types.dart';
 export 'src/window_manager.dart';
 export 'src/widgets/pan.dart';
-export 'src/widgets/app_bar.dart';
