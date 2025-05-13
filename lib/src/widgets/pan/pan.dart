@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:choo_window_manager/src/window_manager.dart';
 
-part './app_bar.dart';
+part 'app_bar.dart';
 
 /// 窗口拖动控件，用于实现窗口的拖动功能
 /// 通过包裹子控件来实现拖动功能
