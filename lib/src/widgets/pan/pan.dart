@@ -39,9 +39,9 @@ class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
     return _spread!;
   }
 
-  set spread(bool? value) {
+  set spread(bool? spread) {
     setState(() {
-      _spread = value;
+      _spread = spread;
     });
   }
 
