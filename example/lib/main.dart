@@ -199,17 +199,17 @@ class _MyAppState extends State<MyApp>
                 child: Center(
                   child: MouseRegion(
                     child: GestureDetector(
-                      child: Text(title),
+                      child: Text(title, style: TextStyle(fontSize: 13)),
                       onTap: () async {
                         print('click');
                       },
                     ),
-                    onEnter: (event) {
-                      ChooAppBar.of(context)?.spread = false;
-                    },
-                    onExit: (event) {
-                      ChooAppBar.of(context)?.spread = true;
-                    },
+                    // onEnter: (event) {
+                    //   ChooAppBar.of(context)?.spread = false;
+                    // },
+                    // onExit: (event) {
+                    //   ChooAppBar.of(context)?.spread = true;
+                    // },
                   ),
                 ),
               );
