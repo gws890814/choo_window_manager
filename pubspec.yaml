@@ -1,5 +1,5 @@
 name: choo_window_manager
-description: "A new Flutter plugin project."
+description: "Enhance Flutter desktop apps with native window management. This plugin provides APIs to manipulate window size, position, state (maximize/minimize), and custom title bars, ideal for building custom desktop UIs."
 version: 0.0.1
 homepage:
 
