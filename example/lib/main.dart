@@ -7,6 +7,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   int windowId = int.parse(args[0]);
+  print('windowId: $windowId');
   ChooWindowManager.ready(
     ChooWindowOptions(
       windowId,
