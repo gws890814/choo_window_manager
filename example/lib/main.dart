@@ -21,12 +21,12 @@ void main(List<dynamic> args) async {
       await window.show();
       await window.focus();
 
-      // await Future.delayed(Duration(milliseconds: 3000), () {
-      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
-      // });
-      // await Future.delayed(Duration(milliseconds: 3000), () {
-      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
-      // });
+      await Future.delayed(Duration(milliseconds: 3000), () {
+        ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      });
+      await Future.delayed(Duration(milliseconds: 3000), () {
+        ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
+      });
       // await window.focus();
       // Offset position = await window.getPosition();
       // print(position);

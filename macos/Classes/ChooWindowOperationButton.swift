@@ -1,5 +1,118 @@
 import Cocoa
 
+private class ChooWindowOperationAnchor: NSObject {
+  private var topAnchor: NSLayoutConstraint
+  private var leftAnchor: NSLayoutConstraint
+  private var widthAnchor: NSLayoutConstraint
+  public var heightAnchor: NSLayoutConstraint
+
+  private var closeBtnLeftAnchor: NSLayoutConstraint
+  private var closeBtnCenterAnchor: NSLayoutConstraint
+  private var closeBtnWidthAnchor: NSLayoutConstraint
+  private var closeBtnHeightAnchor: NSLayoutConstraint
+  private var miniBtnLeftAnchor: NSLayoutConstraint
+  private var miniBtnCenterAnchor: NSLayoutConstraint
+  private var miniBtnWidthAnchor: NSLayoutConstraint
+  private var miniBtnHeightAnchor: NSLayoutConstraint
+  private var zoomBtnLeftAnchor: NSLayoutConstraint
+  private var zoomBtnCenterAnchor: NSLayoutConstraint
+  private var zoomBtnWidthAnchor: NSLayoutConstraint
+  private var zoomBtnHeightAnchor: NSLayoutConstraint
+
+  public let constraints: [NSLayoutConstraint]
+
+  public var width: CGFloat {
+    get {
+      let spacing = self.spacing
+      let width = self.btnSize.width
+      return width * 3 + spacing * 2
+    }
+  }
+
+  public var top: CGFloat {
+    get {
+      return topAnchor.constant
+    }
+    set {
+      topAnchor.constant = newValue
+    }
+  }
+
+  public var left: CGFloat {
+    get {
+      return leftAnchor.constant
+    }
+    set {
+      leftAnchor.constant = newValue
+    }
+  }
+
+  public var height: CGFloat {
+    get {
+      return heightAnchor.constant
+    }
+    set {
+      heightAnchor.constant = newValue
+    }
+  }
+
+  public var spacing: CGFloat {
+    get {
+      return miniBtnLeftAnchor.constant
+    }
+    set {
+      [miniBtnLeftAnchor, zoomBtnLeftAnchor].forEach {
+        $0.constant = newValue
+      }
+      widthAnchor.constant = width
+    }
+  }
+
+  public var btnSize: CGSize {
+    get {
+      return CGSize(width: closeBtnWidthAnchor.constant, height: closeBtnHeightAnchor.constant)
+    }
+    set {
+      [closeBtnWidthAnchor, miniBtnWidthAnchor, zoomBtnWidthAnchor].forEach {
+        $0.constant = newValue.width
+      }
+      [closeBtnHeightAnchor, miniBtnHeightAnchor, zoomBtnHeightAnchor].forEach {
+        $0.constant = newValue.height
+      }
+      widthAnchor.constant = width
+
+    }
+  }
+
+  init(_ window: NSWindow, box: NSView, closeBtn: NSButton, miniBtn: NSButton, zoomBtn: NSButton) {
+    topAnchor = box.topAnchor.constraint(equalTo: window.contentView!.topAnchor, constant: 0)
+    leftAnchor = box.leftAnchor.constraint(equalTo: window.contentView!.leftAnchor, constant: 0)
+    widthAnchor = box.widthAnchor.constraint(equalToConstant: 0)
+    heightAnchor = box.heightAnchor.constraint(equalToConstant: 0)
+
+    closeBtnLeftAnchor = closeBtn.leftAnchor.constraint(equalTo: box.leftAnchor, constant: 0)
+    closeBtnCenterAnchor = closeBtn.centerYAnchor.constraint(equalTo: box.centerYAnchor)
+    closeBtnWidthAnchor = closeBtn.widthAnchor.constraint(equalToConstant: 0)
+    closeBtnHeightAnchor = closeBtn.heightAnchor.constraint(equalToConstant: 0)
+    miniBtnLeftAnchor = miniBtn.leftAnchor.constraint(equalTo: closeBtn.rightAnchor, constant: 0)
+    miniBtnCenterAnchor = miniBtn.centerYAnchor.constraint(equalTo: box.centerYAnchor)
+    miniBtnWidthAnchor = miniBtn.widthAnchor.constraint(equalToConstant: 0)
+    miniBtnHeightAnchor = miniBtn.heightAnchor.constraint(equalToConstant: 0)
+    zoomBtnLeftAnchor = zoomBtn.leftAnchor.constraint(equalTo: miniBtn.rightAnchor, constant: 0)
+    zoomBtnCenterAnchor = zoomBtn.centerYAnchor.constraint(equalTo: box.centerYAnchor)
+    zoomBtnWidthAnchor = zoomBtn.widthAnchor.constraint(equalToConstant: 0)
+    zoomBtnHeightAnchor = zoomBtn.heightAnchor.constraint(equalToConstant: 0)
+
+    constraints = [
+      topAnchor, leftAnchor, widthAnchor, heightAnchor,
+      closeBtnLeftAnchor, closeBtnCenterAnchor, closeBtnWidthAnchor, closeBtnHeightAnchor,
+      miniBtnLeftAnchor, miniBtnCenterAnchor, miniBtnWidthAnchor, miniBtnHeightAnchor,
+      zoomBtnLeftAnchor, zoomBtnCenterAnchor, zoomBtnWidthAnchor, zoomBtnHeightAnchor,
+    ]
+  }
+
+}
+
 class ChooWindowOperationButtonManager: NSView {
   // private var _enabled: Bool = false
   // private var _window: NSWindow
@@ -137,13 +250,16 @@ class ChooWindowOperationButtonManager: NSView {
 
   private var _window: NSWindow?
   private var _enabled: Bool = false
-  private var _spacing: CGFloat = 6
+
+  private var _left: CGFloat? = nil
+  private var _top: CGFloat = 0
   private var _height: CGFloat = 28
-  private var _point: CGPoint = .zero
-
-  private var _btnSize: CGFloat = 14
-
+  private var _spacing: CGFloat = 6
+  private var _size: CGSize = CGSize(width: 14, height: 14)
+  
   private var buttons: [NSButton?] = []
+
+  private var anchor: ChooWindowOperationAnchor!
 
   public override var isFlipped: Bool { true }
   public override var window: NSWindow? {
@@ -154,26 +270,51 @@ class ChooWindowOperationButtonManager: NSView {
     get { return _enabled }
     set {
       _enabled = newValue
-      if _enabled {
-        show()
-      } else {
-        hide()
-      }
+      newValue ? show() : hide()
+    }
+  }
+
+  public var top: CGFloat {
+    get { return _top }
+    set {
+      _top = newValue
+      anchor.top = _top
+    }
+  }
+
+  public var left: CGFloat {
+    get { return _left ?? _spacing}
+    set {
+      _left = newValue
+      anchor.left = newValue
+    }
+  }
+
+  public var height: CGFloat {
+    get { return _height }
+    set {
+      _height = newValue
+      anchor.height = _height
     }
   }
 
   public var spacing: CGFloat {
-    return _spacing
+    get { return _spacing }
+    set {
+      _spacing = newValue
+      anchor.spacing = _spacing
+    }
+  }
+  public var btnSize: CGSize {
+    get { return _size }
+    set {
+      _size = newValue
+      anchor.btnSize = _size
+    }
   }
 
   public var width: CGFloat {
-    var width: CGFloat = 0
-    buttons.forEach {
-      if let button = $0 {
-        width += button.frame.width
-      }
-    }
-    return width + spacing * CGFloat(buttons.count - 1)
+    get { return anchor.width }
   }
 
   init(_ window: NSWindow) {
@@ -184,6 +325,15 @@ class ChooWindowOperationButtonManager: NSView {
       NSWindow.standardWindowButton(.zoomButton, for: window.styleMask),
     ])
     super.init(frame: .zero)
+    
+    anchor = ChooWindowOperationAnchor(
+      window,
+      box: self,
+      closeBtn: buttons[0]!,
+      miniBtn: buttons[1]!,
+      zoomBtn: buttons[2]!
+    )
+    
     translatesAutoresizingMaskIntoConstraints = false
     buttons.forEach {
       if let button = $0 {
@@ -194,89 +344,45 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   private func show() {
-    let closeBtn = window?.standardWindowButton(.closeButton)
-    let miniBtn = window?.standardWindowButton(.miniaturizeButton)
-    let zoomBtn = window?.standardWindowButton(.zoomButton)
-    [closeBtn, miniBtn, zoomBtn].forEach {
+    [
+      window?.standardWindowButton(.closeButton),
+      window?.standardWindowButton(.miniaturizeButton),
+      window?.standardWindowButton(.zoomButton)
+    ].forEach {
       if let button = $0 {
         button.isHidden = true
       }
     }
     wantsLayer = true
     layer?.backgroundColor = NSColor.blue.cgColor
+    anchor.height = height
+    anchor.top = top
+    anchor.left = left
+    anchor.spacing = spacing
+    anchor.btnSize = btnSize
+
     window?.contentView?.addSubview(self)
-    updateFrame()
+    NSLayoutConstraint.activate(anchor.constraints)
+    layoutSubtreeIfNeeded()
   }
 
   private func hide() {
-    let closeBtn = window?.standardWindowButton(.closeButton)
-    let miniBtn = window?.standardWindowButton(.miniaturizeButton)
-    let zoomBtn = window?.standardWindowButton(.zoomButton)
-    [closeBtn, miniBtn, zoomBtn].forEach {
+    self.removeFromSuperview()
+
+    [
+      window?.standardWindowButton(.closeButton),
+      window?.standardWindowButton(.miniaturizeButton),
+      window?.standardWindowButton(.zoomButton)
+    ].forEach {
       if let button = $0 {
         button.isHidden = false
       }
     }
-    self.removeFromSuperview()
-  }
-
-  private var lastActivatedConstraints: [NSLayoutConstraint] = []
-  private func updateFrame(_ positionConstraint: [NSLayoutConstraint] = []) {
-    var buttonConstraint: [NSLayoutConstraint] = []
-    removeConstraints(constraints)
-    NSLayoutConstraint.deactivate(lastActivatedConstraints)
-
-    buttons.forEach {
-      let index = buttons.firstIndex(of: $0)!
-      if let button = $0 {
-
-        buttonConstraint.append(contentsOf: [
-          button.leftAnchor.constraint(
-            equalTo: index == 0 ? leftAnchor : (buttons[index - 1]?.rightAnchor ?? leftAnchor),
-            constant: index == 0 ? 0 : spacing),
-          button.centerYAnchor.constraint(equalTo: centerYAnchor),
-          button.widthAnchor.constraint(
-            equalToConstant: _btnSize),
-          button.heightAnchor.constraint(
-            equalToConstant: _btnSize),
-        ])
-        // button.needsDisplay = true
-        button.layoutSubtreeIfNeeded()
-      }
-    }
-
-    let topAnchor = self.topAnchor.constraint(
-      equalTo: window!.contentView!.topAnchor, constant: _point.y)
-
-    var constraint: [NSLayoutConstraint] = [
-      widthAnchor.constraint(equalToConstant: width),
-      heightAnchor.constraint(equalToConstant: 28),
-      leftAnchor.constraint(equalTo: window!.contentView!.leftAnchor, constant: _point.x),
-      topAnchor,
-    ]
-
-    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-      topAnchor.constant = 0
-      // self.layoutSubtreeIfNeeded()
-    }
-
-    constraint.append(contentsOf: positionConstraint)
-    constraint.append(contentsOf: buttonConstraint)
-    NSLayoutConstraint.activate(constraint)
-    lastActivatedConstraints = constraint
-    // needsDisplay = true
-    layoutSubtreeIfNeeded()
-
-  }
-
-  public func setPosition(_ point: CGPoint) {
-    _point = point
-    updateFrame()
-    //    print(self.constraints)
-
+    NSLayoutConstraint.deactivate(anchor.constraints)
   }
 
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 }
+

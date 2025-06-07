@@ -678,45 +678,14 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       window.titlebarAppearsTransparent = true
       window.styleMask.insert([.fullSizeContentView])
       customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
-      //      window.contentView?.addSubview(customTitleBar!)
-
       setMovable(["isMovable": false])
-
-      //      let btn = window.standardWindowButton(.closeButton)!
-      //
-      //      window.contentView?.addSubview(btn)
-
-      //      customTitleBar?.setTitlebarPosition(x: 120, y: 120)  // 设置位置
-      //      customTitleBar?.buttonSpacing = 8  // 设置按钮间距
-      //      customTitleBar?.titlebarHeight = 100
-
-      //      if let button = NSWindow.standardWindowButton(.closeButton, for: window.styleMask) {
-      //        button.frame.origin.y = 10
-      //        button.frame.origin.x = 10
-      //        window.contentView?.addSubview(button)
-      //      }
-
-      //              customTitleBar?.buttonMargin = 6 // 设置右边距
-      //        customTitleBar?.buttonTopMargin = 12 // 设置顶部边距
       customTitleBar?.enabled = true
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
-      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
     } else {
       // 首先确保窗口样式包含标题栏和标准按钮
       window.styleMask.remove(.fullSizeContentView)
       window.titlebarAppearsTransparent = false
       setMovable(["isMovable": true])
       customTitleBar?.enabled = false
-      //      customTitleBar?.isCustomPositionEnabled = false
-
     }
   }
 
@@ -1393,6 +1362,8 @@ extension ChooWindowManager {
         self.close()
         return nil
       }
+      
+      print("这里死循环")
 
       return event
     }
