@@ -4,7 +4,7 @@ class ChooAppBar extends AppBar {
   // ignore: library_private_types_in_public_api
   static _WindowPanState? of(BuildContext context) =>
       WindowPanWidget.of(context);
-  ChooAppBar({required Widget child, double height = 50, super.key})
+  ChooAppBar({required Widget child, double height = 28, super.key})
     : super(
         toolbarHeight: height,
         title: GestureDetector(

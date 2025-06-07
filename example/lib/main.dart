@@ -7,11 +7,11 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   int windowId = int.parse(args[0]);
-  print('windowId: $windowId');
   ChooWindowManager.ready(
     ChooWindowOptions(
       windowId,
       title: "测试一下",
+      titleBarStyle: WindowTitleVisibility.hidden,
       // offset: Offset(0, 0),
       // size: Size(500, 300),
       animationBehavior: WindowAnimationBehavior.documentWindow,
@@ -19,6 +19,14 @@ void main(List<dynamic> args) async {
     ),
     (window) async {
       await window.show();
+      await window.focus();
+
+      // await Future.delayed(Duration(milliseconds: 3000), () {
+      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      // });
+      // await Future.delayed(Duration(milliseconds: 3000), () {
+      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
+      // });
       // await window.focus();
       // Offset position = await window.getPosition();
       // print(position);
@@ -191,7 +199,7 @@ class _MyAppState extends State<MyApp>
       home: Scaffold(
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
-          height: 30,
+          height: 28,
           child: Builder(
             builder: (context) {
               return Container(

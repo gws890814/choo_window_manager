@@ -13,7 +13,7 @@ let GetAnimationBehaviorMap: [Int: String] = [
   2: "none",
   3: "documentWindow",
   4: "utilityWindow",
-  5: "alertPanel"
+  5: "alertPanel",
 ]
 
 /// 窗口动画行为映射表（设置）
@@ -22,21 +22,21 @@ let SetAnimationBehaviorMap: [String: NSWindow.AnimationBehavior] = [
   "none": .none,
   "documentWindow": .documentWindow,
   "utilityWindow": .utilityWindow,
-  "alertPanel": .alertPanel
+  "alertPanel": .alertPanel,
 ]
 
 /// 标题栏样式映射表（获取）
 /// 用于将整数值映射到对应的标题栏可见性字符串
 let GetTitleBarStyleMap: [Int: String] = [
   0: "visible",
-  1: "hidden"
+  1: "hidden",
 ]
 
 /// 标题栏样式映射表（设置）
 /// 用于将字符串映射到对应的NSWindow.TitleVisibility枚举值
 let SetTitleBarStyleMap: [String: NSWindow.TitleVisibility] = [
   "hidden": .hidden,
-  "visible": .visible
+  "visible": .visible,
 ]
 
 /// ChooWindowManager 是窗口管理器的核心类
@@ -50,48 +50,50 @@ let SetTitleBarStyleMap: [String: NSWindow.TitleVisibility] = [
 open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 管理的窗口实例
   public let window: NSWindow
-  
+
   /// 窗口的唯一标识符
   public let windowId: Int64
-  
+
   /// 创建此窗口前的窗口ID
   public var beforeWindowId: Int64?
-  
+
   /// 窗口是否已完成初始化
   public var isInit: Bool = false
-  
+
   /// 全局方法通道，用于处理应用级别的操作
   public var globalChannel: FlutterMethodChannel?
-  
+
   /// 窗口专用方法通道，用于处理特定窗口的操作
   public var windowChannel: FlutterMethodChannel?
-  
+
   /// 窗口是否已准备就绪
   public var windowReady: Bool = false
-  
+
   /// 是否已添加事件监听器
   public var listener: Bool = false
-  
+
   /// 是否拦截窗口关闭事件
   private var interceptClose: Bool = false
-  
+
   /// 窗口是否处于最大化状态
   private var isMaximize: Bool = false
-  
+
   /// 拖拽事件监听器
   private var panEvent: Any? = nil
-  
+
   /// 移动事件监听器
   private var moveEvent: Any? = nil
-  
+
   /// 拖拽开始时的坐标点
   private var panStartPoint: CGPoint? = nil
-  
+
   /// 悬停事件ID列表
   private var hoverIds: [String] = []
-  
+
   /// 键盘事件监听器
   private var keyboardEventMonitor: Any? = nil
+
+  private var customTitleBar: ChooWindowOperationButtonManager? = nil
 
   public init(_ window: NSWindow) {
     windowId = ChooWindowManager.incrementid
@@ -100,7 +102,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     super.init()
     ChooWindowManager.windowMap[windowId] = self
   }
-  
+
   /// 显示窗口
   ///
   /// 该方法会执行以下操作：
@@ -117,7 +119,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       self.emitEvent("show", args: nil)
     }
   }
-  
+
   /// 隐藏窗口
   ///
   /// 该方法会异步执行以下操作：
@@ -131,7 +133,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       self.emitEvent("hide", args: nil)
     }
   }
-  
+
   /// 使窗口获得焦点
   ///
   /// 该方法会执行以下操作：
@@ -141,7 +143,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     NSApp.activate(ignoringOtherApps: false)
     window.makeKeyAndOrderFront(nil)
   }
-  
+
   /// 使窗口失去焦点
   ///
   /// 该方法会将窗口移到窗口栈的最后面，
@@ -149,7 +151,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func blur() {
     window.orderBack(nil)
   }
-  
+
   /// 关闭窗口
   ///
   /// - Parameters:
@@ -159,60 +161,60 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func close(_ force: Bool = false) {
     if force {
       window.close()
-    } else { 
+    } else {
       window.performClose(nil)
     }
   }
-  
+
   /// 获取窗口的可见状态
   ///
   /// - Returns: 布尔值
   ///   - true: 窗口当前可见
   ///   - false: 窗口当前隐藏
   public func isVisible() -> Bool {
-      return window.isVisible
+    return window.isVisible
   }
-  
+
   /// 获取窗口的最大化状态
   ///
   /// - Returns: 布尔值
   ///   - true: 窗口当前处于最大化状态
   ///   - false: 窗口当前不是最大化状态
   public func isMaximized() -> Bool {
-      return isMaximize
+    return isMaximize
   }
-  
+
   /// 最大化窗口
   ///
   /// 如果窗口当前不是最大化状态，
   /// 该方法会将窗口放大到最大尺寸。
   /// 如果窗口已经是最大化状态，则不执行任何操作。
   public func maximize() {
-      if (!isMaximized()) {
-        window.zoom(nil);
-      }
+    if !isMaximized() {
+      window.zoom(nil)
+    }
   }
-  
+
   /// 还原窗口大小
   ///
   /// 如果窗口当前处于最大化状态，
   /// 该方法会将窗口还原到之前的大小。
   /// 如果窗口不是最大化状态，则不执行任何操作。
   public func unmaximize() {
-      if (isMaximized()) {
-        window.zoom(nil);
-      }
+    if isMaximized() {
+      window.zoom(nil)
+    }
   }
-  
+
   /// 获取窗口的最小化状态
   ///
   /// - Returns: 布尔值
   ///   - true: 窗口当前处于最小化状态
   ///   - false: 窗口当前不是最小化状态
   public func isMinimized() -> Bool {
-      return window.isMiniaturized
+    return window.isMiniaturized
   }
-  
+
   /// 最小化窗口
   ///
   /// 将窗口最小化到Dock栏。
@@ -220,7 +222,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func minimize() {
     window.miniaturize(nil)
   }
-  
+
   /// 从最小化状态恢复窗口
   ///
   /// 将最小化的窗口从Dock栏恢复到原来的位置和大小。
@@ -228,7 +230,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func restore() {
     window.deminiaturize(nil)
   }
-  
+
   /// 获取窗口的全屏状态
   ///
   /// - Returns: 布尔值
@@ -237,7 +239,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func isFullScreen() -> Bool {
     return window.styleMask.contains(.fullScreen)
   }
-  
+
   /// 设置窗口的全屏状态
   ///
   /// - Parameters:
@@ -249,25 +251,25 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 该方法会根据当前窗口状态和目标状态决定是否切换全屏模式
   public func setFullScreen(args: [String: Any]) {
     let isFullScreen: Bool = args["isFullScreen"] as! Bool
-    
-    if (isFullScreen) {
-      if (!window.styleMask.contains(.fullScreen)) {
+
+    if isFullScreen {
+      if !window.styleMask.contains(.fullScreen) {
         window.toggleFullScreen(nil)
       }
     } else {
-      if (window.styleMask.contains(.fullScreen)) {
+      if window.styleMask.contains(.fullScreen) {
         window.toggleFullScreen(nil)
       }
     }
   }
-  
+
   /// 获取窗口的当前大小
   ///
   /// - Returns: NSSize对象，包含窗口的宽度和高度
   public func getSize() -> NSSize {
     return window.frame.size
   }
-  
+
   /// 设置窗口的大小
   ///
   /// - Parameters:
@@ -283,13 +285,13 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let width: CGFloat = args["width"] as! CGFloat
     let height: CGFloat = args["height"] as! CGFloat
     var frameRect = window.frame
-    
+
     frameRect.origin.y += (frameRect.size.height - height)
     frameRect.size.width = width
     frameRect.size.height = height
     applyFrameChange(frameRect: frameRect, animate: animate)
   }
-  
+
   /// 应用窗口框架的变更
   ///
   /// - Parameters:
@@ -299,13 +301,13 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 该私有方法负责实际执行窗口框架的更改。
   /// 根据animate参数决定是否使用动画效果来平滑过渡到新的窗口状态。
   private func applyFrameChange(frameRect: NSRect, animate: Bool) {
-    if (animate) {
+    if animate {
       window.animator().setFrame(frameRect, display: true, animate: true)
     } else {
       window.setFrame(frameRect, display: true)
     }
   }
-  
+
   /// 获取窗口的最小尺寸限制
   ///
   /// - Returns: 包含最小尺寸信息的字典
@@ -316,10 +318,10 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getMinSize() -> [String: Any] {
     return [
       "width": window.minSize.width,
-      "height": window.minSize.height
+      "height": window.minSize.height,
     ]
   }
-  
+
   /// 设置窗口的最小尺寸限制
   ///
   /// - Parameters:
@@ -335,7 +337,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     )
     window.minSize = minSize
   }
-  
+
   /// 获取窗口的最大尺寸限制
   ///
   /// - Returns: 包含最大尺寸信息的字典
@@ -346,10 +348,10 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getMaxSize() -> [String: Any] {
     return [
       "width": window.maxSize.width,
-      "height": window.maxSize.height
+      "height": window.maxSize.height,
     ]
   }
-  
+
   /// 设置窗口的最大尺寸限制
   ///
   /// - Parameters:
@@ -365,7 +367,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     )
     window.maxSize = maxSize
   }
-  
+
   /// 获取当前屏幕的可用尺寸
   ///
   /// - Returns: 屏幕的可用尺寸
@@ -376,7 +378,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     guard let screen = window.screen ?? NSScreen.main else { return .zero }
     return screen.visibleFrame.size
   }
-  
+
   /// 将窗口居中显示在屏幕上
   ///
   /// - Parameters:
@@ -394,7 +396,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     frame.origin.y = screen.visibleFrame.minY + (screen.visibleFrame.height - frame.height) / 2
     applyFrameChange(frameRect: frame, animate: animate)
   }
-  
+
   /// 获取窗口的当前位置
   ///
   /// - Parameters:
@@ -413,15 +415,15 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getPosition(args: [String: Any]) -> [String: CGFloat]? {
     let global: Bool = args["global"] as? Bool ?? false
     let windowFrame = window.frame
-    if (window.screen == nil) {
+    if window.screen == nil {
       return nil
     }
-    
+
     let screenHeight = window.screen!.visibleFrame.maxY
     let x = windowFrame.origin.x - window.screen!.visibleFrame.origin.x
     let y = screenHeight - (windowFrame.origin.y + windowFrame.height)
-    
-    if (global) {
+
+    if global {
       let globalTop = getGlobalTop()
       let windowTop = windowFrame.origin.y + windowFrame.height
       let globalX = windowFrame.origin.x
@@ -429,10 +431,10 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
 
       return ["globalX": globalX, "globalY": globalY, "x": x, "y": y]
     }
-    
+
     return ["x": x, "y": y]
   }
-  
+
   /// 设置窗口的位置
   ///
   /// - Parameters:
@@ -449,12 +451,12 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let animate: Bool = args["animate"] as? Bool ?? false
     let global: Bool = args["global"] as? Bool ?? false
     let point: NSPoint = NSPoint(x: args["x"] as! CGFloat, y: args["y"] as! CGFloat)
-    
+
     var targetFrame = window.frame
     targetFrame.origin = calculateWindowOrigin(point: point, global: global, size: targetFrame.size)
     applyFrameChange(frameRect: targetFrame, animate: animate)
   }
-  
+
   /// 获取所有屏幕中最高点的Y坐标
   ///
   /// - Returns: 所有可见屏幕中最高点的Y坐标值
@@ -465,7 +467,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let allVisibleFrames = NSScreen.screens.map { $0.visibleFrame }
     return allVisibleFrames.map { $0.maxY }.max() ?? 0
   }
-  
+
   /// 计算窗口的原点位置
   ///
   /// - Parameters:
@@ -485,24 +487,24 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       print("屏幕都找不到")
       return .zero
     }
-    
+
     var origin = NSPoint.zero
-    
+
     if global {
       let globalTop = getGlobalTop()
       origin.x = point.x
       origin.y = globalTop - point.y - size.height
     } else {
       let visibleFrame = currentScreen.visibleFrame
-      
+
       origin.x = visibleFrame.origin.x + point.x
       let windowTop = visibleFrame.maxY - point.y
       origin.y = windowTop - size.height
     }
-    
+
     return origin
   }
-  
+
   /// 获取窗口的边界矩形
   ///
   /// - Parameters:
@@ -517,9 +519,11 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let global: Bool = args["global"] as? Bool ?? false
     let size: NSSize = getSize()
     let point: [String: CGFloat] = getPosition(args: ["global": global])!
-    return NSRect(x: (point["globalX"] ?? point["x"])!, y: (point["globalY"] ?? point["y"])!, width: size.width, height: size.height)
+    return NSRect(
+      x: (point["globalX"] ?? point["x"])!, y: (point["globalY"] ?? point["y"])!, width: size.width,
+      height: size.height)
   }
-  
+
   /// 设置窗口的边界矩形
   ///
   /// - Parameters:
@@ -537,17 +541,17 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func setBounds(args: [String: Any]) {
     var newFrame = NSRect.zero
     newFrame.size = NSSize(width: args["width"] as! CGFloat, height: args["height"] as! CGFloat)
-    
+
     let x = args["x"] as! CGFloat
     let y = args["y"] as! CGFloat
     let animate = args["animate"] as? Bool ?? false
     let global = args["global"] as? Bool ?? false
-    
+
     let point = NSPoint(x: x, y: y)
     newFrame.origin = calculateWindowOrigin(point: point, global: global, size: newFrame.size)
     applyFrameChange(frameRect: newFrame, animate: animate)
   }
-  
+
   /// 获取窗口的标题文本
   ///
   /// - Returns: 当前窗口的标题文本字符串
@@ -557,7 +561,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getTitle() -> String {
     return window.title
   }
-  
+
   /// 设置窗口的标题文本
   ///
   /// - Parameters:
@@ -572,7 +576,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     window.title = title
     emitEvent("changeTitle", args: ["title": title])
   }
-  
+
   /// 获取窗口的动画行为
   ///
   /// - Returns: 表示当前动画行为的字符串，可能的值包括：
@@ -587,7 +591,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getAnimationBehavior() -> String? {
     return GetAnimationBehaviorMap[window.animationBehavior.rawValue]
   }
-  
+
   /// 设置窗口的动画行为
   ///
   /// - Parameters:
@@ -603,10 +607,11 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 新的动画行为将立即生效，并应用于后续的窗口操作。
   public func setAnimationBehavior(args: [String: Any]) {
     let animationBehaviorString = args["animationBehavior"] as? String ?? "default"
-    let animationBehavior: NSWindow.AnimationBehavior = SetAnimationBehaviorMap[animationBehaviorString] ?? .default
+    let animationBehavior: NSWindow.AnimationBehavior =
+      SetAnimationBehaviorMap[animationBehaviorString] ?? .default
     window.animationBehavior = animationBehavior
   }
-  
+
   /// 将窗口设置为无边框样式
   ///
   /// 该方法会执行以下操作：
@@ -624,12 +629,12 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     window.isOpaque = true
     window.hasShadow = false
     window.backgroundColor = NSColor.clear
-    if (window.styleMask.contains(.titled)) {
+    if window.styleMask.contains(.titled) {
       let titleBarView: NSView = (window.standardWindowButton(.closeButton)?.superview)!.superview!
       titleBarView.isHidden = true
     }
   }
-  
+
   /// 获取窗口的标题栏样式
   ///
   /// - Returns: 表示标题栏可见性的字符串
@@ -641,7 +646,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getTitleBarStyle() -> String {
     return GetTitleBarStyleMap[window.titleVisibility.rawValue]!
   }
-  
+
   /// 设置窗口标题栏的样式
   ///
   /// - Parameters:
@@ -666,22 +671,55 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// - 非不透明（支持透明效果）
   /// - 显示窗口阴影
   public func setTitleBarStyle(args: [String: Any]) {
-    let titleBarStyle: NSWindow.TitleVisibility = SetTitleBarStyleMap[args["titleBarStyle"] as! String] ?? .visible
+    let titleBarStyle: NSWindow.TitleVisibility =
+      SetTitleBarStyleMap[args["titleBarStyle"] as! String] ?? .visible
     window.titleVisibility = titleBarStyle
-    if (titleBarStyle == .hidden) {
+    if titleBarStyle == .hidden {
       window.titlebarAppearsTransparent = true
-      window.styleMask.insert(.fullSizeContentView)
+      window.styleMask.insert([.fullSizeContentView])
+      customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+      //      window.contentView?.addSubview(customTitleBar!)
+
       setMovable(["isMovable": false])
+
+      //      let btn = window.standardWindowButton(.closeButton)!
+      //
+      //      window.contentView?.addSubview(btn)
+
+      //      customTitleBar?.setTitlebarPosition(x: 120, y: 120)  // 设置位置
+      //      customTitleBar?.buttonSpacing = 8  // 设置按钮间距
+      //      customTitleBar?.titlebarHeight = 100
+
+      //      if let button = NSWindow.standardWindowButton(.closeButton, for: window.styleMask) {
+      //        button.frame.origin.y = 10
+      //        button.frame.origin.x = 10
+      //        window.contentView?.addSubview(button)
+      //      }
+
+      //              customTitleBar?.buttonMargin = 6 // 设置右边距
+      //        customTitleBar?.buttonTopMargin = 12 // 设置顶部边距
+      customTitleBar?.enabled = true
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 100))
+      customTitleBar?.setPosition(CGPoint(x: 100, y: 105))
     } else {
-      window.titlebarAppearsTransparent = false
+      // 首先确保窗口样式包含标题栏和标准按钮
       window.styleMask.remove(.fullSizeContentView)
+      window.titlebarAppearsTransparent = false
       setMovable(["isMovable": true])
+      customTitleBar?.enabled = false
+      //      customTitleBar?.isCustomPositionEnabled = false
+
     }
-    
-    window.isOpaque = false
-    window.hasShadow = true
   }
-  
+
   /// 获取窗口是否可移动
   ///
   /// 该方法用于检查窗口当前是否可以被用户拖拽移动。
@@ -694,9 +732,9 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   ///   - true: 窗口当前可以被移动
   ///   - false: 窗口当前不可移动
   public func isMovable() -> Bool {
-      return window.isMovable
+    return window.isMovable
   }
-  
+
   /// 设置窗口是否可移动
   ///
   /// - Parameters:
@@ -711,7 +749,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let isMovable: Bool = args["isMovable"] as! Bool
     window.isMovable = isMovable
   }
-  
+
   /// 获取窗口的透明度
   ///
   /// - Returns: 窗口当前的透明度值（0.0 ~ 1.0）
@@ -722,7 +760,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   public func getOpacity() -> CGFloat {
     return window.alphaValue
   }
-  
+
   /// 设置窗口的透明度
   ///
   /// - Parameters:
@@ -736,7 +774,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     let opacity: CGFloat = args["opacity"] as! CGFloat
     window.alphaValue = opacity
   }
-  
+
   /// 获取当前鼠标位置的全局坐标
   ///
   /// - Returns: 包含鼠标位置信息的字典
@@ -750,17 +788,17 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
 
     var allScreensFrame = CGRect.zero
     NSScreen.screens.forEach { screen in
-        allScreensFrame = allScreensFrame.union(screen.frame)
+      allScreensFrame = allScreensFrame.union(screen.frame)
     }
 
     let globalX = mouseLocation.x - allScreensFrame.origin.x
     let globalY = (allScreensFrame.origin.y + allScreensFrame.height) - mouseLocation.y
     return [
       "x": globalX,
-      "y": globalY
+      "y": globalY,
     ]
   }
-  
+
   /// 添加悬停事件监听器
   ///
   /// 该方法为窗口添加鼠标悬停事件监听功能，用于跟踪鼠标在窗口内的移动。
@@ -780,16 +818,16 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     if !hoverIds.contains(id) {
       hoverIds.append(id)
     }
-    
+
     if let monitor = moveEvent {
       NSEvent.removeMonitor(monitor)
     }
-    
+
     sendHoverEvent(callback)
-    
+
     moveEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
       guard let self = self else { return event }
-      
+
       if self.processMouseEvent(callback) {
         return event
       } else {
@@ -797,7 +835,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       }
     }
   }
-  
+
   /// 处理鼠标事件
   ///
   /// 该私有方法负责处理鼠标移动事件，计算鼠标在窗口中的位置，
@@ -818,28 +856,27 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 5. 如果在范围内，触发回调并发送悬停事件
   private func processMouseEvent(_ callback: ((_ point: NSPoint) -> Void)? = nil) -> Bool {
     guard let contentView = window.contentView else { return false }
-    
+
     let screenLocation = NSEvent.mouseLocation
-    
+
     let windowLocation = window.convertPoint(fromScreen: screenLocation)
-    
+
     let viewLocation = contentView.convert(windowLocation, from: nil)
-    
+
     let flippedY = contentView.bounds.height - viewLocation.y
     let point = CGPoint(x: viewLocation.x, y: flippedY)
-    
-    if point.x < 0 || point.x > window.frame.width || 
-       point.y < 0 || point.y > window.frame.height {
+
+    if point.x < 0 || point.x > window.frame.width || point.y < 0 || point.y > window.frame.height {
       return false
     }
-    
+
     callback?(windowLocation)
-    
+
     emitEvent("hover", args: ["x": point.x, "y": point.y])
-    
+
     return true
   }
-  
+
   /// 发送悬停事件
   ///
   /// 该私有方法用于立即发送一次悬停事件，通常在添加监听器时调用，
@@ -852,7 +889,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   private func sendHoverEvent(_ callback: ((_ point: NSPoint) -> Void)? = nil) {
     _ = processMouseEvent(callback)
   }
-  
+
   /// 移除悬停事件监听器
   ///
   /// 该方法用于移除之前添加的悬停事件监听器。
@@ -868,7 +905,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 2. 如果提供了特定ID，只移除该ID的监听器
   /// 3. 当没有剩余监听器时，清理事件监听器资源
   public func removeHoverListener(_ id: String?) {
-    if (id == nil) {
+    if id == nil {
       hoverIds.removeAll()
       if let event = moveEvent {
         NSEvent.removeMonitor(event)
@@ -884,7 +921,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       moveEvent = nil
     }
   }
-  
+
   /// 添加预拖拽事件监听器
   ///
   /// 该方法为窗口添加预拖拽事件监听功能，用于在拖拽开始前
@@ -902,30 +939,30 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       self.panStartPoint = point
     }
   }
-  
+
   /// 移除预拖拽事件监听器
-///
-/// - Parameter id: 要移除的监听器ID
-///
-/// 该方法用于移除之前添加的预拖拽事件监听器
-/// 通过调用removeHoverListener来清理相关的事件监听
-public func removePrePanListener(_ id: String) {
+  ///
+  /// - Parameter id: 要移除的监听器ID
+  ///
+  /// 该方法用于移除之前添加的预拖拽事件监听器
+  /// 通过调用removeHoverListener来清理相关的事件监听
+  public func removePrePanListener(_ id: String) {
     removeHoverListener(id)
   }
-  
+
   /// 添加窗口拖拽事件监听器
-///
-/// 该方法为窗口添加拖拽事件监听，使窗口能够响应用户的拖拽操作。
-/// 监听器会跟踪鼠标左键拖拽事件，并实时更新窗口位置。
-/// 在拖拽过程中，会通过Flutter通道发送pan事件，
-/// 通知Flutter层窗口的最新位置信息。
-///
-/// - Returns: 字典，包含窗口的初始全局位置信息
-///   - globalX: 窗口相对于所有屏幕左边界的水平距离
-///   - globalY: 窗口相对于所有屏幕顶部的垂直距离
-///   - x: 窗口相对于当前屏幕的水平坐标
-///   - y: 窗口相对于当前屏幕的垂直坐标
-public func addPanListener() -> [String: CGFloat] {
+  ///
+  /// 该方法为窗口添加拖拽事件监听，使窗口能够响应用户的拖拽操作。
+  /// 监听器会跟踪鼠标左键拖拽事件，并实时更新窗口位置。
+  /// 在拖拽过程中，会通过Flutter通道发送pan事件，
+  /// 通知Flutter层窗口的最新位置信息。
+  ///
+  /// - Returns: 字典，包含窗口的初始全局位置信息
+  ///   - globalX: 窗口相对于所有屏幕左边界的水平距离
+  ///   - globalY: 窗口相对于所有屏幕顶部的垂直距离
+  ///   - x: 窗口相对于当前屏幕的水平坐标
+  ///   - y: 窗口相对于当前屏幕的垂直坐标
+  public func addPanListener() -> [String: CGFloat] {
     panEvent = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
       var windowLocation: CGPoint
       if self.panStartPoint == nil {
@@ -938,7 +975,8 @@ public func addPanListener() -> [String: CGFloat] {
       } else {
         windowLocation = self.panStartPoint!
       }
-      guard let event = NSEvent.mouseEvent(
+      guard
+        let event = NSEvent.mouseEvent(
           with: .leftMouseDragged,
           location: windowLocation,
           modifierFlags: [.command],
@@ -948,7 +986,8 @@ public func addPanListener() -> [String: CGFloat] {
           eventNumber: 0,
           clickCount: 1,
           pressure: 0.5
-      ) else { return event }
+        )
+      else { return event }
 
       self.window.performDrag(with: event)
       self.windowChannel?.invokeMethod("pan", arguments: self.getPosition(args: ["global": true]))
@@ -956,7 +995,7 @@ public func addPanListener() -> [String: CGFloat] {
     }
     return getPosition(args: ["global": true])!
   }
-  
+
   /// 移除拖拽事件监听器
   ///
   /// 该方法会执行以下操作：
@@ -970,7 +1009,7 @@ public func addPanListener() -> [String: CGFloat] {
       panEvent = nil
     }
   }
-  
+
   /// 向指定窗口发送事件
   ///
   /// - Parameters:
@@ -984,12 +1023,16 @@ public func addPanListener() -> [String: CGFloat] {
   ///     - args: 回调参数
   ///
   /// 该方法用于窗口间的通信，允许一个窗口向另一个窗口发送事件和数据
-  public func windowEmit(args: [String: Any], callback: @escaping (_ windowId: Int64, _ args: Any?) -> Void) {
+  public func windowEmit(
+    args: [String: Any], callback: @escaping (_ windowId: Int64, _ args: Any?) -> Void
+  ) {
     let targetId: Int64 = args["targetId"] as! Int64
     let sourceId: Int64 = args["id"] as! Int64
     if let target = ChooWindowManager.windowMap[targetId] {
       let method: String = args["method"] as! String
-      let arguments: [String : Any] = ["method": method, "id": sourceId, "arguments": args["arguments"] as Any]
+      let arguments: [String: Any] = [
+        "method": method, "id": sourceId, "arguments": args["arguments"] as Any,
+      ]
       target.emitEvent("event", args: arguments, callback: callback)
     }
   }
@@ -997,27 +1040,27 @@ public func addPanListener() -> [String: CGFloat] {
 
 /// ChooWindowManager的扩展，提供全局窗口管理功能
 extension ChooWindowManager {
-    /// 用于生成唯一的窗口标识符
-    ///
-    /// 每次创建新窗口时，该值会自增，
-    /// 确保每个窗口都有一个唯一的ID
-    static private var incrementid: Int64 = 0
-    
-    /// 存储所有窗口实例的映射表
-    ///
-    /// 键：窗口的唯一标识符（Int64）
-    /// 值：对应的ChooWindowManager实例
-    ///
-    /// 用于在全局范围内管理和访问所有窗口实例
-    static public var windowMap: [Int64: ChooWindowManager] = [:]
-    
-    /// 终止应用程序
-    ///
-    /// 该方法会立即关闭应用程序及其所有窗口。
-    /// 调用此方法将触发应用程序的正常终止流程。
-    static public func destroy() {
-        NSApp.terminate(nil)
-    }
+  /// 用于生成唯一的窗口标识符
+  ///
+  /// 每次创建新窗口时，该值会自增，
+  /// 确保每个窗口都有一个唯一的ID
+  static private var incrementid: Int64 = 0
+
+  /// 存储所有窗口实例的映射表
+  ///
+  /// 键：窗口的唯一标识符（Int64）
+  /// 值：对应的ChooWindowManager实例
+  ///
+  /// 用于在全局范围内管理和访问所有窗口实例
+  static public var windowMap: [Int64: ChooWindowManager] = [:]
+
+  /// 终止应用程序
+  ///
+  /// 该方法会立即关闭应用程序及其所有窗口。
+  /// 调用此方法将触发应用程序的正常终止流程。
+  static public func destroy() {
+    NSApp.terminate(nil)
+  }
 }
 
 extension ChooWindowManager {
@@ -1042,10 +1085,12 @@ extension ChooWindowManager {
       return objc_getAssociatedObject(self, &AssociatedKeys.allowClosing) as? Bool
     }
     set(value) {
-      objc_setAssociatedObject(self, &AssociatedKeys.allowClosing, value, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+      objc_setAssociatedObject(
+        self, &AssociatedKeys.allowClosing, value,
+        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
-  
+
   /// 键盘事件处理标志
   ///
   /// 该属性通过关联对象机制实现，用于控制键盘事件的处理：
@@ -1058,7 +1103,9 @@ extension ChooWindowManager {
       return objc_getAssociatedObject(self, &AssociatedKeys.AllowKeyboard) as? NSEvent
     }
     set(value) {
-      objc_setAssociatedObject(self, &AssociatedKeys.AllowKeyboard, value, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+      objc_setAssociatedObject(
+        self, &AssociatedKeys.AllowKeyboard, value,
+        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
 
@@ -1073,7 +1120,10 @@ extension ChooWindowManager {
   ///
   /// 该方法通过Flutter通道向Flutter层发送事件。
   /// 只有在事件监听器已启用的情况下才会发送事件。
-  public func emitEvent(_ eventName: String, args: [String: Any?]?, callback: ((_ id: Int64, _ args: Any?) -> Void)? = nil) {
+  public func emitEvent(
+    _ eventName: String, args: [String: Any?]?,
+    callback: ((_ id: Int64, _ args: Any?) -> Void)? = nil
+  ) {
     if !listener {
       return
     }
@@ -1093,7 +1143,7 @@ extension ChooWindowManager {
   /// 该方法用于发送应用级别的全局事件
   /// 目前为预留方法，暂未实现具体功能
   public func emitGlobalEvent(_ eventName: String, args: [String: Any]?) {}
-  
+
   /// 窗口大小改变时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1105,16 +1155,16 @@ extension ChooWindowManager {
   public func windowDidResize(_ notification: Notification) {
     let size: NSSize = getSize()
     emitEvent("resize", args: ["width": size.width, "height": size.height])
-    if (!isMaximize && window.isZoomed) {
+    if !isMaximize && window.isZoomed {
       isMaximize = true
       emitEvent("maximize", args: nil)
     }
-    if (isMaximize && !window.isZoomed) {
+    if isMaximize && !window.isZoomed {
       isMaximize = false
       emitEvent("unmaximize", args: nil)
     }
   }
-  
+
   /// 窗口移动完成时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1123,12 +1173,12 @@ extension ChooWindowManager {
   /// 获取窗口的新位置并发送move事件
   public func windowDidMove(_ notification: Notification) {
     let point: [String: CGFloat]? = getPosition(args: ["global": true])
-    if (point == nil) {
+    if point == nil {
       return
     }
     emitEvent("move", args: point)
   }
-  
+
   /// 窗口即将移动时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1137,12 +1187,12 @@ extension ChooWindowManager {
   /// 获取窗口的当前位置并发送move事件
   public func windowWillMove(_ notification: Notification) {
     let point: [String: CGFloat]? = getPosition(args: ["global": true])
-    if (point == nil) {
+    if point == nil {
       return
     }
     emitEvent("move", args: point)
   }
-  
+
   /// 窗口成为主窗口时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1152,9 +1202,9 @@ extension ChooWindowManager {
   /// 2. 发送focus事件
   public func windowDidBecomeMain(_ notification: Notification) {
     addKeyboardEvent()
-    emitEvent("focus", args: nil);
+    emitEvent("focus", args: nil)
   }
-  
+
   /// 窗口失去主窗口状态时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1164,9 +1214,9 @@ extension ChooWindowManager {
   /// 2. 发送blur事件
   public func windowDidResignMain(_ notification: Notification) {
     removeKeyboardEvent()
-    emitEvent("blur", args: nil);
+    emitEvent("blur", args: nil)
   }
-  
+
   /// 窗口最小化时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1174,9 +1224,9 @@ extension ChooWindowManager {
   /// 该方法会在窗口被最小化时被调用
   /// 发送minimize事件通知窗口状态的变化
   public func windowDidMiniaturize(_ notification: Notification) {
-    emitEvent("minimize", args: nil);
+    emitEvent("minimize", args: nil)
   }
-  
+
   /// 窗口从最小化恢复时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1184,49 +1234,46 @@ extension ChooWindowManager {
   /// 该方法会在窗口从最小化状态恢复时被调用
   /// 发送restore事件通知窗口状态的变化
   public func windowDidDeminiaturize(_ notification: Notification) {
-    emitEvent("restore", args: nil);
+    emitEvent("restore", args: nil)
   }
-  
+
   /// 窗口即将进入全屏模式时的回调方法
   ///
   /// - Parameter notification: 通知对象
   ///
   /// 该方法会在窗口即将进入全屏模式时被调用
   /// 发送willEnterFullScreen事件
-  public func windowWillEnterFullScreen(_ notification: Notification){
-    emitEvent("willEnterFullScreen", args: nil);
+  public func windowWillEnterFullScreen(_ notification: Notification) {
+    emitEvent("willEnterFullScreen", args: nil)
   }
-  
+
   /// 窗口已进入全屏模式时的回调方法
   ///
   /// - Parameter notification: 通知对象
   ///
   /// 该方法会在窗口完成进入全屏模式时被调用
   /// 发送didEnterFullScreen事件
-  public func windowDidEnterFullScreen(_ notification: Notification){
-    emitEvent("didEnterFullScreen", args: nil);
+  public func windowDidEnterFullScreen(_ notification: Notification) {
+    emitEvent("didEnterFullScreen", args: nil)
+
   }
-  
-  /// 窗口即将退出全屏模式时的回调方法
-  ///
-  /// - Parameter notification: 通知对象
-  ///
-  /// 该方法会在窗口即将退出全屏模式时被调用
+
   /// 发送willLeaveFullScreen事件
-  public func windowWillExitFullScreen(_ notification: Notification){
-    emitEvent("willLeaveFullScreen", args: nil);
+  public func windowWillExitFullScreen(_ notification: Notification) {
+    emitEvent("willLeaveFullScreen", args: nil)
   }
-  
+
   /// 窗口已退出全屏模式时的回调方法
   ///
   /// - Parameter notification: 通知对象
   ///
   /// 该方法会在窗口完成退出全屏模式时被调用
   /// 发送didLeaveFullScreen事件
-  public func windowDidExitFullScreen(_ notification: Notification){
-    emitEvent("didLeaveFullScreen", args: nil);
+  public func windowDidExitFullScreen(_ notification: Notification) {
+    emitEvent("didLeaveFullScreen", args: nil)
+
   }
-  
+
   /// 窗口是否应该关闭的代理方法
   ///
   /// - Parameter sender: 发送关闭请求的窗口
@@ -1240,10 +1287,12 @@ extension ChooWindowManager {
   /// 3. 再次调用时根据allowClosing标志决定是否允许关闭
   public func windowShouldClose(_ sender: NSWindow) -> Bool {
     if allowClosing == nil {
-      emitEvent("willClose", args: nil, callback: { id, arguments in
-        self.allowClosing = arguments as? Bool
-        self.close()
-      })
+      emitEvent(
+        "willClose", args: nil,
+        callback: { id, arguments in
+          self.allowClosing = arguments as? Bool
+          self.close()
+        })
       return false
     } else {
       let isClose = allowClosing!
@@ -1251,7 +1300,7 @@ extension ChooWindowManager {
       return isClose
     }
   }
-  
+
   /// 窗口即将关闭时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1263,10 +1312,10 @@ extension ChooWindowManager {
   public func windowWillClose(_ notification: Notification) {
     removeKeyboardEvent()
     removeHoverListener(nil)
-    
+
     emitEvent("close", args: nil)
   }
-    
+
   /// 添加键盘事件监听器
   ///
   /// 该方法负责设置键盘事件的监听，主要功能包括：
@@ -1285,10 +1334,11 @@ extension ChooWindowManager {
     if keyboardEventMonitor != nil {
       removeKeyboardEvent()
     }
-    
-    keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+
+    keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) {
+      [weak self] event in
       guard let self = self else { return event }
-      
+
       if self.AllowKeyboard == nil {
         var modifierFlags: [String] = []
         if event.modifierFlags.contains(.shift) {
@@ -1318,14 +1368,14 @@ extension ChooWindowManager {
         if event.modifierFlags.contains(.deviceIndependentFlagsMask) {
           modifierFlags.append("deviceIndependentFlagsMask")
         }
-        
+
         emitEvent(
           "keyboard",
           args: [
             "keyCode": event.keyCode,
             "modifierFlags": modifierFlags,
             "characters": event.characters,
-            "charactersIgnoringModifiers": event.charactersIgnoringModifiers
+            "charactersIgnoringModifiers": event.charactersIgnoringModifiers,
           ],
           callback: { id, args in
             if args as? Bool ?? true {
@@ -1336,18 +1386,18 @@ extension ChooWindowManager {
         )
         return nil
       }
-      
+
       self.AllowKeyboard = nil
-      
+
       if event.modifierFlags.contains(.command) && event.keyCode == 13 {
         self.close()
         return nil
       }
-      
+
       return event
     }
   }
-  
+
   /// 移除键盘事件监听器
   ///
   /// 该方法执行以下操作：
