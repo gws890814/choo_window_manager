@@ -21,12 +21,12 @@ void main(List<dynamic> args) async {
       await window.show();
       await window.focus();
 
-      await Future.delayed(Duration(milliseconds: 3000), () {
-        ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
-      });
-      await Future.delayed(Duration(milliseconds: 3000), () {
-        ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
-      });
+      // await Future.delayed(Duration(milliseconds: 3000), () {
+      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      // });
+      // await Future.delayed(Duration(milliseconds: 3000), () {
+      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
+      // });
       // await window.focus();
       // Offset position = await window.getPosition();
       // print(position);
@@ -41,6 +41,8 @@ void main(List<dynamic> args) async {
   // await WindowManagerPlus.ensureInitialized(
   //   int.parse((args ?? []).isEmpty ? '0' : '1'),
   // );
+
+  // UnimplementedError: opaque is not implemented on macOS See also
 
   // WindowOptions windowOptions = WindowOptions(
   //   // size: Size(800, 600),
@@ -138,7 +140,7 @@ class _MyAppState extends State<MyApp>
   @override
   Future<bool> onWillClose() async {
     print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
-    return true;
+    return false;
   }
 
   @override
@@ -147,8 +149,9 @@ class _MyAppState extends State<MyApp>
     if (event.keyCode == 13 &&
         event.modifierFlags.contains(ModifierFlags.command)) {
       print('第二次捕捉到了模拟关闭，让他往下走::${ChooWindowManager.current.id}');
+      return true;
     }
-    return true;
+    return event.modifierFlags.isEmpty;
   }
 
   @override

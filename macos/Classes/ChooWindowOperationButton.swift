@@ -1,5 +1,17 @@
 import Cocoa
 
+private let IndexToButtonTypes: [Int: NSWindow.ButtonType] = [
+  0: .closeButton,
+  1: .miniaturizeButton,
+  2: .zoomButton,
+]
+
+private let ButtonTypesToIndex: [Int: NSWindow.ButtonType] = [
+  0: .closeButton,
+  1: .miniaturizeButton,
+  2: .zoomButton,
+]
+
 private class ChooWindowOperationAnchor: NSObject {
   private var topAnchor: NSLayoutConstraint
   private var leftAnchor: NSLayoutConstraint
@@ -256,6 +268,9 @@ class ChooWindowOperationButtonManager: NSView {
   private var _height: CGFloat = 28
   private var _spacing: CGFloat = 6
   private var _size: CGSize = CGSize(width: 14, height: 14)
+
+  private var _hover: Bool = false
+  private var trackingArea: NSTrackingArea?
   
   private var buttons: [NSButton?] = []
 
@@ -344,13 +359,23 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   private func show() {
-    [
+    var buttonStatus: [NSWindow.ButtonType: Bool] = [:]
+    let defaultButton = [
       window?.standardWindowButton(.closeButton),
       window?.standardWindowButton(.miniaturizeButton),
       window?.standardWindowButton(.zoomButton)
-    ].forEach {
+    ]
+    defaultButton.forEach {
       if let button = $0 {
+        let index = defaultButton.firstIndex(of: button)!
+        buttonStatus[IndexToButtonTypes[index]!] = button.isHidden
         button.isHidden = true
+      }
+    }
+    buttons.forEach {
+      if let button = $0 {
+        let index = buttons.firstIndex(of: button)!
+        button.isHidden = buttonStatus[IndexToButtonTypes[index]!] ?? false
       }
     }
     wantsLayer = true
@@ -360,25 +385,91 @@ class ChooWindowOperationButtonManager: NSView {
     anchor.left = left
     anchor.spacing = spacing
     anchor.btnSize = btnSize
-
+    
     window?.contentView?.addSubview(self)
     NSLayoutConstraint.activate(anchor.constraints)
     layoutSubtreeIfNeeded()
+
+    trackingArea = NSTrackingArea(
+      rect: bounds, options: [.mouseEnteredAndExited, .activeInActiveApp], owner: self,
+      userInfo: nil)
+      
+    addTrackingArea(trackingArea!)
   }
 
   private func hide() {
+    var buttonStatus: [NSWindow.ButtonType: Bool] = [:]
+    buttons.forEach {
+      if let button = $0 {
+        let index = buttons.firstIndex(of: button)!
+        buttonStatus[IndexToButtonTypes[index]!] = button.isHidden
+      }
+    }
     self.removeFromSuperview()
-
-    [
+    if let trackingArea = trackingArea { self.removeTrackingArea(trackingArea) }
+    let defaultButtons = [
       window?.standardWindowButton(.closeButton),
       window?.standardWindowButton(.miniaturizeButton),
       window?.standardWindowButton(.zoomButton)
-    ].forEach {
+    ]
+    defaultButtons.forEach {
       if let button = $0 {
-        button.isHidden = false
+        let index = defaultButtons.firstIndex(of: button)!
+        button.isHidden = buttonStatus[IndexToButtonTypes[index]!] ?? false
       }
     }
     NSLayoutConstraint.deactivate(anchor.constraints)
+  }
+
+  override func mouseEntered(with event: NSEvent) {
+    _hover = true
+    buttons.forEach {
+      if let button = $0 {
+        button.needsDisplay = true
+      }
+    }
+  }
+
+  override func mouseExited(with event: NSEvent) {
+    _hover = false
+    buttons.forEach {
+      if let button = $0 {
+        button.needsDisplay = true
+      }
+    }
+  }
+  
+  @objc func _mouseInGroup(_ sender: Any) -> Bool { return _hover }
+  
+  public func changeButtonHiddeStatus(_ types: [NSWindow.ButtonType], status: Bool) {
+    if enabled {
+      buttons.forEach {
+        if let button = $0 {
+          let index = buttons.firstIndex(of: button)!
+          let type = IndexToButtonTypes[index]!
+          
+          if types.contains(type) {
+            button.isHidden = status
+          }
+        }
+      }
+    } else {
+      let defaultButtons = [
+        window?.standardWindowButton(.closeButton),
+        window?.standardWindowButton(.miniaturizeButton),
+        window?.standardWindowButton(.zoomButton)
+      ]
+      defaultButtons.forEach {
+        if let button = $0 {
+          let index = defaultButtons.firstIndex(of: button)!
+          let type = IndexToButtonTypes[index]!
+          
+          if types.contains(type) {
+            button.isHidden = status
+          }
+        }
+      }
+    }
   }
 
   required init?(coder: NSCoder) {
