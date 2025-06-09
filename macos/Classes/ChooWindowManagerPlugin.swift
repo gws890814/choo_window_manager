@@ -328,6 +328,47 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       // 返回: {x: Double, y: Double} - 鼠标坐标
       result(wManager.getMousePoint())
       break
+    case "setWindowButtonHidden":
+      wManager.setWindowButtonHidden(args["types"] as! [String], state: args["state"] as! Bool)
+      result(nil)
+      break
+    case "setWindowButtonEnabled":
+      wManager.setWindowButtonEnabled(args["types"] as! [String], state: args["state"] as! Bool)
+      result(nil)
+      break
+    case "getWindowButtonRegionPosition":
+      let point:CGPoint = wManager.getWindowButtonRegionPosition()
+      result(["x": point.x, "y": point.y])
+      break
+    case "setWindowButtonRegionPosition":
+      wManager.setWindowButtonRegionPosition(y: args["y"] as! CGFloat, x: args["x"] as? CGFloat)
+      result(nil)
+      break
+    case "getWindowButtonRegionSize":
+      let size: CGSize = wManager.getWindowButtonRegionSize()
+      result(["width": size.width, "height": size.height])
+      break
+    case "setWindowButtonRegionHeight":
+      wManager.setWindowButtonRegionHeight(height: args["height"] as! CGFloat)
+      result(nil)
+      break
+    case "getWindowButtonSpacing":
+      let spacing: CGFloat = wManager.getWindowButtonSpacing()
+      result(spacing)
+      break
+    case "setWindowButtonSpacing":
+      wManager.setWindowButtonSpacing(spacing: args["spacing"] as! CGFloat)
+      result(nil)
+      break
+    case "getWindowButtonSize":
+      let size: CGSize = wManager.getWindowButtonSize()
+      result(["width": size.width, "height": size.height])
+      break
+    case "setWindowButtonSize":
+      let size: CGSize = CGSize(width: args["width"] as! CGFloat, height: args["height"] as! CGFloat)
+      wManager.setWindowButtonSize(size)
+      result(nil)
+      break
     case "addPanListener":
       // 添加窗口拖拽事件监听器
       // 返回: Bool - 是否添加成功

@@ -26,5 +26,7 @@ class ChooAppBar extends AppBar {
         automaticallyImplyLeading: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-      );
+      ) {
+    ChooWindowManager.current.setWindowButtonRegionHeight(height);
+  }
 }

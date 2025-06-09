@@ -2,6 +2,8 @@ import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
+part 'window_types.dart';
+
 const uuid = Uuid();
 
 /// 窗口管理器事件抽象类，用于处理窗口相关的事件
@@ -411,8 +413,13 @@ class ChooWindowManager {
     } else if (options.offset != null) {
       await setPosition(options.offset!);
     }
+
+    if (options.buttonOptions != null) {
+      options.buttonOptions!._exec();
+    }
+
     await _windowChannel.invokeMethod<void>("windowReady", args);
-    print('success');
+
     callback(this);
   }
 
@@ -691,6 +698,116 @@ extension ChooCurrentWindowManager on ChooWindowManager {
       result['y']!,
       result['width']!,
       result['height']!,
+    );
+  }
+
+  Future<void> setWindowButtonHidden({
+    List<WindowButtonType> types = const [],
+    required bool state,
+  }) async {
+    final Map<String, dynamic> arguments = {
+      'types': types.map((type) => type.name).toList(),
+      'state': state,
+      ...args,
+    };
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonHidden',
+      arguments,
+    );
+  }
+
+  Future<void> setWindowButtonEnabled({
+    List<WindowButtonType> types = const [],
+    required bool state,
+  }) async {
+    final Map<String, dynamic> arguments = {
+      'types': types.map((type) => type.name).toList(),
+      'state': state,
+      ...args,
+    };
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonEnabled',
+      arguments,
+    );
+  }
+
+  Future<WindowButtonRegionPosition> getWindowButtonRegionPosition() async {
+    final Map<String, dynamic> arguments = {...args};
+    Map<String, double?> result =
+        (await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+          'getWindowButtonRegionPosition',
+          arguments,
+        ))!.cast<String, double>();
+    return WindowButtonRegionPosition(y: result['y']!, x: result['x']);
+  }
+
+  Future<void> setWindowButtonRegionPosition(
+    WindowButtonRegionPosition position,
+  ) async {
+    final Map<String, dynamic> arguments = {
+      ...args,
+      'x': position.x,
+      'y': position.y,
+    };
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonRegionPosition',
+      arguments,
+    );
+  }
+
+  Future<Size> getWindowButtonRegionSize() async {
+    final Map<String, dynamic> arguments = {...args};
+    Map<String, double?> result =
+        (await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+          'getWindowButtonRegionSize',
+          arguments,
+        ))!.cast<String, double>();
+    return Size(result['width']!, result['height']!);
+  }
+
+  Future<void> setWindowButtonRegionHeight(double height) async {
+    final Map<String, dynamic> arguments = {...args, 'height': height};
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonRegionHeight',
+      arguments,
+    );
+  }
+
+  Future<double> getWindowButtonSpacing() async {
+    final Map<String, dynamic> arguments = {...args};
+    return (await _windowChannel.invokeMethod<double>(
+      'getWindowButtonSpacing',
+      arguments,
+    ))!;
+  }
+
+  Future<void> setWindowButtonSpacing(double spacing) async {
+    final Map<String, dynamic> arguments = {...args, 'spacing': spacing};
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonSpacing',
+      arguments,
+    );
+  }
+
+  Future<Size> getWindowButtonSize() async {
+    final Map<String, dynamic> arguments = {...args};
+    Map<String, double?> result =
+        (await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+          'getWindowButtonSize',
+          arguments,
+        ))!.cast<String, double>();
+    return Size(result['width']!, result['height']!);
+  }
+
+  Future<void> setWindowButtonSize(Size size) async {
+    final Map<String, dynamic> arguments = {
+      ...args,
+      'width': size.width,
+      'height': size.height,
+    };
+    await _windowChannel.invokeMethod<Map<Object?, Object?>>(
+      'setWindowButtonSize',
+      arguments,
     );
   }
 

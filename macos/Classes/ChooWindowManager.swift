@@ -677,6 +677,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     if titleBarStyle == .hidden {
       window.titlebarAppearsTransparent = true
       window.styleMask.insert([.fullSizeContentView])
+
       customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
       setMovable(["isMovable": false])
       customTitleBar?.enabled = true
@@ -1382,5 +1383,76 @@ extension ChooWindowManager {
       NSEvent.removeMonitor(monitor)
       keyboardEventMonitor = nil
     }
+  }
+}
+
+// 窗口操作
+extension ChooWindowManager {
+  public func setWindowButtonHidden(_ buttons: [String], state: Bool) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    let buttonTypes: [NSWindow.ButtonType] = buttons.filter {
+      return StringToButtonType[$0] != nil
+    } .map {
+      return StringToButtonType[$0]!
+    }
+    customTitleBar?.setButtonHidden(buttonTypes, state: state)
+  }
+  
+  public func setWindowButtonEnabled(_ buttons: [String], state: Bool) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    let buttonTypes: [NSWindow.ButtonType] = buttons.filter {
+      return StringToButtonType[$0] != nil
+    } .map {
+      return StringToButtonType[$0]!
+    }
+
+    customTitleBar?.setButtonEnabled(buttonTypes, state: state)
+  }
+  
+  public func getWindowButtonRegionPosition() -> CGPoint {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    let left: CGFloat = customTitleBar!.left!
+    let top: CGFloat = customTitleBar!.top
+    
+    return CGPoint(x: left, y: top)
+  }
+  
+  public func setWindowButtonRegionPosition(y: CGFloat, x: CGFloat? = nil) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    customTitleBar?.left = x
+    customTitleBar?.top = y
+  }
+  
+  public func getWindowButtonRegionSize() -> CGSize {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    let width: CGFloat = customTitleBar!.width
+    let height: CGFloat = customTitleBar!.height
+    
+    return CGSize(width: width, height: height)
+  }
+  
+  public func setWindowButtonRegionHeight(height: CGFloat) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    customTitleBar?.height = height
+  }
+  
+  public func getWindowButtonSpacing() -> CGFloat {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    return customTitleBar!.spacing
+  }
+  
+  public func setWindowButtonSpacing(spacing: CGFloat) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    customTitleBar?.spacing = spacing
+  }
+  
+  public func getWindowButtonSize() -> CGSize {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    return customTitleBar!.btnSize
+  }
+  
+  public func setWindowButtonSize(_ size: CGSize) {
+    customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
+    customTitleBar?.btnSize = size
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+part of './window_manager.dart';
 
 /// 窗口动画行为枚举
 /// 定义窗口打开和关闭时的动画效果
@@ -90,6 +90,8 @@ extension ModifierFlagsExtension on ModifierFlags {
     }
   }
 }
+
+enum WindowButtonType { close, miniaturize, zoom }
 
 /// 窗口标题可见性枚举
 /// 控制窗口标题栏的显示方式
@@ -258,6 +260,70 @@ class GlobalOffset extends Offset {
       'GlobalOffset(${globalDx.toStringAsFixed(1)}, ${globalDy.toStringAsFixed(1)}, ${dx.toStringAsFixed(1)}, ${dy.toStringAsFixed(1)})';
 }
 
+class WindowButtonOptions {
+  final List<WindowButtonType> enabledButtons;
+  final List<WindowButtonType> hiddenButtons;
+  final double? height;
+  final WindowButtonRegionPosition? regionPosition;
+  final Size? buttonSize;
+  final double? spacing;
+
+  WindowButtonOptions({
+    this.enabledButtons = const [
+      WindowButtonType.close,
+      WindowButtonType.miniaturize,
+      WindowButtonType.zoom,
+    ],
+    this.hiddenButtons = const [],
+    this.height,
+    this.regionPosition,
+    this.buttonSize,
+    this.spacing,
+  });
+
+  void _exec() async {
+    List<WindowButtonType> allTypes = [
+      WindowButtonType.close,
+      WindowButtonType.miniaturize,
+      WindowButtonType.zoom,
+    ];
+    List<WindowButtonType> enabledTypes =
+        allTypes
+            .where((buttonType) => !enabledButtons.contains(buttonType))
+            .toList();
+    if (enabledTypes.isNotEmpty) {
+      await ChooWindowManager.current.setWindowButtonEnabled(
+        types: enabledTypes,
+        state: false,
+      );
+    }
+
+    if (hiddenButtons.isNotEmpty) {
+      await ChooWindowManager.current.setWindowButtonHidden(
+        types: hiddenButtons,
+        state: true,
+      );
+    }
+
+    if (height != null) {
+      await ChooWindowManager.current.setWindowButtonRegionHeight(height!);
+    }
+
+    if (regionPosition != null) {
+      await ChooWindowManager.current.setWindowButtonRegionPosition(
+        regionPosition!,
+      );
+    }
+
+    if (buttonSize != null) {
+      await ChooWindowManager.current.setWindowButtonSize(buttonSize!);
+    }
+    if (spacing != null) {
+      await ChooWindowManager.current.setWindowButtonSpacing(spacing!);
+    }
+  }
+}
+
 /// 窗口选项类，用于配置窗口的初始参数
 /// 通过此类可以设置窗口的大小、位置、标题、动画效果等属性
 /// 通常在创建新窗口时使用
@@ -312,6 +378,8 @@ class ChooWindowOptions {
   /// 如果未设置，则显示默认标题栏
   final WindowTitleVisibility? titleBarStyle;
 
+  final WindowButtonOptions? buttonOptions;
+
   ChooWindowOptions(
     this.id, {
     bool? center,
@@ -323,6 +391,7 @@ class ChooWindowOptions {
     this.opacity,
     this.animationBehavior,
     this.titleBarStyle,
+    this.buttonOptions,
   }) : center = offset == null ? (center ?? true) : false;
 }
 
@@ -370,4 +439,11 @@ class KeyboardEvent {
     this.characters,
     this.charactersIgnoringModifiers,
   });
+}
+
+class WindowButtonRegionPosition {
+  final double? x;
+  final double y;
+
+  WindowButtonRegionPosition({this.x, required this.y});
 }

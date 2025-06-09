@@ -1,5 +1,11 @@
 import Cocoa
 
+public let StringToButtonType: [String: NSWindow.ButtonType] = [
+  "close": .closeButton,
+  "miniaturize": .miniaturizeButton,
+  "zoom": .zoomButton,
+]
+
 private let IndexToButtonTypes: [Int: NSWindow.ButtonType] = [
   0: .closeButton,
   1: .miniaturizeButton,
@@ -126,140 +132,7 @@ private class ChooWindowOperationAnchor: NSObject {
 }
 
 class ChooWindowOperationButtonManager: NSView {
-  // private var _enabled: Bool = false
-  // private var _window: NSWindow
-  // private var _titlebarView: NSView?
-  // private var trackingArea: NSTrackingArea?
-  // private var closeBtn: NSButton
-  // private var miniBtn: NSButton
-  // private var zoomBtn: NSButton
-  // private var _x: CGFloat = 0 { didSet { updateLayoutIfNeeded() } }
-  // private var _y: CGFloat = 0 { didSet { updateLayoutIfNeeded() } }
-  // private var _height: CGFloat = 500 { didSet { updateLayoutIfNeeded() } }
-  // private var _spacing: CGFloat = 0 { didSet { updateLayoutIfNeeded() } }
-  // private var _hover: Bool = false
-  // private var layoutConstraints: [NSLayoutConstraint] = []
-  // private var positionConstraints: [NSLayoutConstraint] = []
-  // override var window: NSWindow? { _window }
-  // override var isFlipped: Bool { true }
-  // public var enabled: Bool {
-  //   get { _enabled }
-  //   set {
-  //     _enabled = newValue
-  //     newValue ? enableCustomButtons() : restoreSystemButtons()
-  //   }
-  // }
-  // public var x: CGFloat {
-  //   get { _x }
-  //   set { _x = newValue }
-  // }
-  // public var y: CGFloat {
-  //   get { _y }
-  //   set { _y = newValue }
-  // }
-  // public var height: CGFloat {
-  //   get { _height }
-  //   set { _height = newValue }
-  // }
-  // public var spacing: CGFloat {
-  //   get { _spacing }
-  //   set { _spacing = newValue }
-  // }
-  // init(_ window: NSWindow) {
-  //   self._window = window
-  //   self.closeBtn = NSWindow.standardWindowButton(.closeButton, for: window.styleMask)!
-  //   self.miniBtn = NSWindow.standardWindowButton(.miniaturizeButton, for: window.styleMask)!
-  //   self.zoomBtn = NSWindow.standardWindowButton(.zoomButton, for: window.styleMask)!
-  //   super.init(frame: .zero)
-  //   translatesAutoresizingMaskIntoConstraints = false
-  // }
-  // required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-  // private func enableCustomButtons() {
-  //   [
-  //     window!.standardWindowButton(.closeButton)!,
-  //     window!.standardWindowButton(.miniaturizeButton)!, window!.standardWindowButton(.zoomButton)!,
-  //   ].forEach { $0.isHidden = true }
-  //   [closeBtn, miniBtn, zoomBtn].forEach { addSubview($0) }
-  //   updateLayoutIfNeeded()
-  //   window?.contentView?.addSubview(self)
-  //   updateLayoutIfNeeded()
-  //   trackingArea = NSTrackingArea(
-  //     rect: bounds, options: [.mouseEnteredAndExited, .activeInActiveApp], owner: self,
-  //     userInfo: nil)
-  //   addTrackingArea(trackingArea!)
-  // }
-  // private func restoreSystemButtons() {
-  //   for view in self.subviews { view.removeFromSuperview() }
-  //   self.removeFromSuperview()
-  //   if let trackingArea = trackingArea { self.removeTrackingArea(trackingArea) }
-  //   [
-  //     window!.standardWindowButton(.closeButton)!,
-  //     window!.standardWindowButton(.miniaturizeButton)!, window!.standardWindowButton(.zoomButton)!,
-  //   ].forEach { $0.isHidden = false }
-  // }
-  // private func updateLayoutIfNeeded() {
-  //   NSLayoutConstraint.deactivate(layoutConstraints)
-  //   NSLayoutConstraint.deactivate(positionConstraints)
-  //   [closeBtn, miniBtn, zoomBtn].forEach {
-  //     $0.removeConstraints($0.constraints)
-  //     $0.translatesAutoresizingMaskIntoConstraints = false
-  //   }
-  //   let buttons = [closeBtn, miniBtn, zoomBtn]
-  //   var previousButton: NSButton? = nil
-  //   var constraints: [NSLayoutConstraint] = []
-  //   for (index, button) in buttons.enumerated() {
-  //     if index == 0 {
-  //       constraints.append(contentsOf: [
-  //         button.leftAnchor.constraint(equalTo: self.leftAnchor, constant: spacing),
-  //         button.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-  //       ])
-  //     } else if let prev = previousButton {
-  //       constraints.append(contentsOf: [
-  //         button.leftAnchor.constraint(equalTo: prev.rightAnchor, constant: spacing),
-  //         button.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-  //       ])
-  //     }
-  //     previousButton = button
-  //   }
-  //   let totalWidth =
-  //     buttons.map { $0.frame.width }.reduce(0, +) + CGFloat(buttons.count + 1) * spacing
-  //   constraints.append(contentsOf: [
-  //     widthAnchor.constraint(equalToConstant: totalWidth),
-  //     heightAnchor.constraint(equalToConstant: height),
-  //   ])
-  //   NSLayoutConstraint.activate(constraints)
-  //   layoutConstraints = constraints
-  //   if let window = self.window, let contentView = window.contentView {
-  //     let posConstraints = [
-  //       self.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: x),
-  //       self.topAnchor.constraint(equalTo: contentView.topAnchor, constant: y),
-  //     ]
-  //     NSLayoutConstraint.activate(posConstraints)
-  //     positionConstraints = posConstraints
-  //   }
-  //   self.layoutSubtreeIfNeeded()
-  // }
-  // private func updateTrackingArea() {
-  //   if let trackingArea = trackingArea { self.removeTrackingArea(trackingArea) }
-  //   trackingArea = NSTrackingArea(
-  //     rect: bounds, options: [.mouseEnteredAndExited, .activeInActiveApp], owner: self,
-  //     userInfo: nil)
-  //   addTrackingArea(trackingArea!)
-  // }
-  // override func mouseEntered(with event: NSEvent) {
-  //   _hover = true
-  //   closeBtn.needsDisplay = true
-  //   miniBtn.needsDisplay = true
-  //   zoomBtn.needsDisplay = true
-  // }
-  // override func mouseExited(with event: NSEvent) {
-  //   _hover = false
-  //   closeBtn.needsDisplay = true
-  //   miniBtn.needsDisplay = true
-  //   zoomBtn.needsDisplay = true
-  // }
-  // @objc func _mouseInGroup(_ sender: Any) -> Bool { return _hover }
-
+  
   private var _window: NSWindow?
   private var _enabled: Bool = false
 
@@ -297,11 +170,11 @@ class ChooWindowOperationButtonManager: NSView {
     }
   }
 
-  public var left: CGFloat {
+  public var left: CGFloat? {
     get { return _left ?? _spacing}
     set {
       _left = newValue
-      anchor.left = newValue
+      anchor.left = newValue ?? _spacing
     }
   }
 
@@ -350,6 +223,7 @@ class ChooWindowOperationButtonManager: NSView {
     )
     
     translatesAutoresizingMaskIntoConstraints = false
+    
     buttons.forEach {
       if let button = $0 {
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -359,7 +233,8 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   private func show() {
-    var buttonStatus: [NSWindow.ButtonType: Bool] = [:]
+    var buttonHiddenStatus: [NSWindow.ButtonType: Bool] = [:]
+    var buttonEnabledStatus: [NSWindow.ButtonType: Bool] = [:]
     let defaultButton = [
       window?.standardWindowButton(.closeButton),
       window?.standardWindowButton(.miniaturizeButton),
@@ -368,21 +243,23 @@ class ChooWindowOperationButtonManager: NSView {
     defaultButton.forEach {
       if let button = $0 {
         let index = defaultButton.firstIndex(of: button)!
-        buttonStatus[IndexToButtonTypes[index]!] = button.isHidden
+        buttonHiddenStatus[IndexToButtonTypes[index]!] = button.isHidden
+        buttonEnabledStatus[IndexToButtonTypes[index]!] = button.isEnabled
         button.isHidden = true
       }
     }
     buttons.forEach {
       if let button = $0 {
         let index = buttons.firstIndex(of: button)!
-        button.isHidden = buttonStatus[IndexToButtonTypes[index]!] ?? false
+        button.isHidden = buttonHiddenStatus[IndexToButtonTypes[index]!] ?? false
+        button.isEnabled = buttonEnabledStatus[IndexToButtonTypes[index]!] ?? true
       }
     }
-    wantsLayer = true
-    layer?.backgroundColor = NSColor.blue.cgColor
+//    wantsLayer = true
+//    layer?.backgroundColor = NSColor.blue.cgColor
     anchor.height = height
     anchor.top = top
-    anchor.left = left
+    anchor.left = left!
     anchor.spacing = spacing
     anchor.btnSize = btnSize
     
@@ -398,11 +275,13 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   private func hide() {
-    var buttonStatus: [NSWindow.ButtonType: Bool] = [:]
+    var buttonHiddenStatus: [NSWindow.ButtonType: Bool] = [:]
+    var buttonEnabledStatus: [NSWindow.ButtonType: Bool] = [:]
     buttons.forEach {
       if let button = $0 {
         let index = buttons.firstIndex(of: button)!
-        buttonStatus[IndexToButtonTypes[index]!] = button.isHidden
+        buttonHiddenStatus[IndexToButtonTypes[index]!] = button.isHidden
+        buttonEnabledStatus[IndexToButtonTypes[index]!] = button.isEnabled
       }
     }
     self.removeFromSuperview()
@@ -415,7 +294,8 @@ class ChooWindowOperationButtonManager: NSView {
     defaultButtons.forEach {
       if let button = $0 {
         let index = defaultButtons.firstIndex(of: button)!
-        button.isHidden = buttonStatus[IndexToButtonTypes[index]!] ?? false
+        button.isHidden = buttonHiddenStatus[IndexToButtonTypes[index]!] ?? false
+        button.isEnabled = buttonEnabledStatus[IndexToButtonTypes[index]!] ?? true
       }
     }
     NSLayoutConstraint.deactivate(anchor.constraints)
@@ -441,7 +321,7 @@ class ChooWindowOperationButtonManager: NSView {
   
   @objc func _mouseInGroup(_ sender: Any) -> Bool { return _hover }
   
-  public func changeButtonHiddeStatus(_ types: [NSWindow.ButtonType], status: Bool) {
+  public func setButtonHidden(_ types: [NSWindow.ButtonType], state: Bool) {
     if enabled {
       buttons.forEach {
         if let button = $0 {
@@ -449,7 +329,7 @@ class ChooWindowOperationButtonManager: NSView {
           let type = IndexToButtonTypes[index]!
           
           if types.contains(type) {
-            button.isHidden = status
+            button.isHidden = state
           }
         }
       }
@@ -465,7 +345,38 @@ class ChooWindowOperationButtonManager: NSView {
           let type = IndexToButtonTypes[index]!
           
           if types.contains(type) {
-            button.isHidden = status
+            button.isHidden = state
+          }
+        }
+      }
+    }
+  }
+  
+  public func setButtonEnabled(_ types: [NSWindow.ButtonType], state: Bool) {
+    if enabled {
+      buttons.forEach {
+        if let button = $0 {
+          let index = buttons.firstIndex(of: button)!
+          let type = IndexToButtonTypes[index]!
+          
+          if types.contains(type) {
+            button.isEnabled = state
+          }
+        }
+      }
+    } else {
+      let defaultButtons = [
+        window?.standardWindowButton(.closeButton),
+        window?.standardWindowButton(.miniaturizeButton),
+        window?.standardWindowButton(.zoomButton)
+      ]
+      defaultButtons.forEach {
+        if let button = $0 {
+          let index = defaultButtons.firstIndex(of: button)!
+          let type = IndexToButtonTypes[index]!
+          
+          if types.contains(type) {
+            button.isEnabled = state
           }
         }
       }
