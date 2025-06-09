@@ -22,6 +22,24 @@ void main(List<dynamic> args) async {
       await window.focus();
 
       // await Future.delayed(Duration(milliseconds: 3000), () {
+      //   ChooWindowManager.current.setWindowButtonEnabled(
+      //     types: [WindowButtonType.close],
+      //     state: false,
+      //   );
+      // });
+      // await Future.delayed(Duration(milliseconds: 1000), () {
+      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      // });
+      // await Future.delayed(Duration(milliseconds: 1000), () async {
+      //   ChooWindowManager.current.setWindowButtonHidden(
+      //     types: [WindowButtonType.close],
+      //     state: false,
+      //   );
+      //   Size size = await ChooWindowManager.current.getWindowButtonSize();
+      //   print('width: ${size.width}, height: ${size.height}');
+      //   ChooWindowManager.current.setWindowButtonSize(Size(30, 30));
+      // });
+      // await Future.delayed(Duration(milliseconds: 1000), () {
       //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
       // });
       // await Future.delayed(Duration(milliseconds: 3000), () {
@@ -86,7 +104,6 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
     if (event.keyCode == 13 &&
         event.modifierFlags.contains(ModifierFlags.command)) {
       print('捕捉到了关闭，让他往下走::${ChooWindowManager.current.id}');
-      // return false;
     }
     return true;
   }
@@ -105,7 +122,6 @@ class _MyAppState extends State<MyApp>
     super.initState();
     WindowManagerEvent.addListener(this);
     ChooWindowManager.current.getTitle().then((value) {
-      print(value);
       setState(() {
         title = value;
       });
@@ -140,16 +156,19 @@ class _MyAppState extends State<MyApp>
   @override
   Future<bool> onWillClose() async {
     print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
-    return false;
+    return true;
   }
 
   @override
   Future<bool> onKeyboard(event) async {
     // TODO: implement onKeyboard
-    if (event.keyCode == 13 &&
-        event.modifierFlags.contains(ModifierFlags.command)) {
-      print('第二次捕捉到了模拟关闭，让他往下走::${ChooWindowManager.current.id}');
-      return true;
+    if (event.modifierFlags.contains(ModifierFlags.command)) {
+      if ([0, 13].contains(event.keyCode)) {
+        return true;
+      } else if (12 == event.keyCode) {
+        ChooWindowManager.destroy();
+        return false;
+      }
     }
     return event.modifierFlags.isEmpty;
   }
@@ -202,7 +221,6 @@ class _MyAppState extends State<MyApp>
       home: Scaffold(
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
-          height: 28,
           child: Builder(
             builder: (context) {
               return Container(
