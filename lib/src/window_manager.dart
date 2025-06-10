@@ -498,18 +498,6 @@ extension ChooCurrentWindowManager on ChooWindowManager {
     await _windowChannel.invokeMethod<void>('close', {...args, "force": force});
   }
 
-  Future<bool> isMovable() async {
-    return (await _windowChannel.invokeMethod<bool>('isMovable', args))!;
-  }
-
-  Future<void> movable(bool movable) async {
-    print('!!!!!movable:${movable}');
-    await _windowChannel.invokeMethod<bool>('movable', {
-      "isMovable": movable,
-      ...args,
-    });
-  }
-
   /// 检查窗口是否可见。
   ///
   /// @return 窗口是否可见。

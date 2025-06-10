@@ -143,13 +143,6 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
       wManager.close(args["force"] as? Bool ?? false)
       result(nil)
       break
-    case "isMovable":
-      result(wManager.isMovable())
-      break
-    case "movable":
-      wManager.setMovable(["isMovable": args["isMovable"] as! Bool])
-      result(nil)
-      break
     case "isVisible":
       // 获取窗口可见状态
       // 返回: Bool - 窗口是否可见

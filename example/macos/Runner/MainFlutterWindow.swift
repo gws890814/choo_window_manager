@@ -2,7 +2,7 @@ import Cocoa
 import FlutterMacOS
 import choo_window_manager
 
-class MainFlutterWindow: NSWindow {
+class MainFlutterWindow: ChooBaseWindow {
   override func awakeFromNib() {
     let project = ChooWindowManagerPlugin.initFlutterObject()
     let flutterViewController = ChooFlutterViewController(project: project)

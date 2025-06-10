@@ -40,11 +40,9 @@ private class ChooWindowOperationAnchor: NSObject {
   public let constraints: [NSLayoutConstraint]
 
   public var width: CGFloat {
-    get {
-      let spacing = self.spacing
-      let width = self.btnSize.width
-      return width * 3 + spacing * 2
-    }
+    let spacing = self.spacing
+    let width = self.btnSize.width
+    return width * 3 + spacing * 2
   }
 
   public var top: CGFloat {
@@ -132,7 +130,7 @@ private class ChooWindowOperationAnchor: NSObject {
 }
 
 class ChooWindowOperationButtonManager: NSView {
-  
+
   private var _window: NSWindow?
   private var _enabled: Bool = false
 
@@ -144,15 +142,15 @@ class ChooWindowOperationButtonManager: NSView {
 
   private var _hover: Bool = false
   private var trackingArea: NSTrackingArea?
-  
+
   private var buttons: [NSButton?] = []
 
   private var anchor: ChooWindowOperationAnchor!
-  
+
   private var _isEnter: Bool = false
-  
+
   public var isEnter: Bool {
-    get { _isEnter }
+    _isEnter
   }
 
   public override var isFlipped: Bool { true }
@@ -177,7 +175,7 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   public var left: CGFloat? {
-    get { return _left ?? _spacing}
+    get { return _left ?? _spacing }
     set {
       _left = newValue
       anchor.left = newValue ?? _spacing
@@ -208,7 +206,7 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   public var width: CGFloat {
-    get { return anchor.width }
+    return anchor.width
   }
 
   init(_ window: NSWindow) {
@@ -219,7 +217,7 @@ class ChooWindowOperationButtonManager: NSView {
       NSWindow.standardWindowButton(.zoomButton, for: window.styleMask),
     ])
     super.init(frame: .zero)
-    
+
     anchor = ChooWindowOperationAnchor(
       window,
       box: self,
@@ -227,9 +225,9 @@ class ChooWindowOperationButtonManager: NSView {
       miniBtn: buttons[1]!,
       zoomBtn: buttons[2]!
     )
-    
+
     translatesAutoresizingMaskIntoConstraints = false
-    
+
     buttons.forEach {
       if let button = $0 {
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -244,7 +242,7 @@ class ChooWindowOperationButtonManager: NSView {
     let defaultButton = [
       window?.standardWindowButton(.closeButton),
       window?.standardWindowButton(.miniaturizeButton),
-      window?.standardWindowButton(.zoomButton)
+      window?.standardWindowButton(.zoomButton),
     ]
     defaultButton.forEach {
       if let button = $0 {
@@ -261,14 +259,14 @@ class ChooWindowOperationButtonManager: NSView {
         button.isEnabled = buttonEnabledStatus[IndexToButtonTypes[index]!] ?? true
       }
     }
-//    wantsLayer = true
-//    layer?.backgroundColor = NSColor.blue.cgColor
+    //    wantsLayer = true
+    //    layer?.backgroundColor = NSColor.blue.cgColor
     anchor.height = height
     anchor.top = top
     anchor.left = left!
     anchor.spacing = spacing
     anchor.btnSize = btnSize
-    
+
     window?.contentView?.addSubview(self)
     NSLayoutConstraint.activate(anchor.constraints)
     layoutSubtreeIfNeeded()
@@ -276,7 +274,7 @@ class ChooWindowOperationButtonManager: NSView {
     trackingArea = NSTrackingArea(
       rect: bounds, options: [.mouseEnteredAndExited, .activeInActiveApp], owner: self,
       userInfo: nil)
-      
+
     addTrackingArea(trackingArea!)
   }
 
@@ -295,7 +293,7 @@ class ChooWindowOperationButtonManager: NSView {
     let defaultButtons = [
       window?.standardWindowButton(.closeButton),
       window?.standardWindowButton(.miniaturizeButton),
-      window?.standardWindowButton(.zoomButton)
+      window?.standardWindowButton(.zoomButton),
     ]
     defaultButtons.forEach {
       if let button = $0 {
@@ -326,16 +324,16 @@ class ChooWindowOperationButtonManager: NSView {
       }
     }
   }
-  
+
   @objc func _mouseInGroup(_ sender: Any) -> Bool { return _hover }
-  
+
   public func setButtonHidden(_ types: [NSWindow.ButtonType], state: Bool) {
     if enabled {
       buttons.forEach {
         if let button = $0 {
           let index = buttons.firstIndex(of: button)!
           let type = IndexToButtonTypes[index]!
-          
+
           if types.contains(type) {
             button.isHidden = state
           }
@@ -345,13 +343,13 @@ class ChooWindowOperationButtonManager: NSView {
       let defaultButtons = [
         window?.standardWindowButton(.closeButton),
         window?.standardWindowButton(.miniaturizeButton),
-        window?.standardWindowButton(.zoomButton)
+        window?.standardWindowButton(.zoomButton),
       ]
       defaultButtons.forEach {
         if let button = $0 {
           let index = defaultButtons.firstIndex(of: button)!
           let type = IndexToButtonTypes[index]!
-          
+
           if types.contains(type) {
             button.isHidden = state
           }
@@ -359,14 +357,14 @@ class ChooWindowOperationButtonManager: NSView {
       }
     }
   }
-  
+
   public func setButtonEnabled(_ types: [NSWindow.ButtonType], state: Bool) {
     if enabled {
       buttons.forEach {
         if let button = $0 {
           let index = buttons.firstIndex(of: button)!
           let type = IndexToButtonTypes[index]!
-          
+
           if types.contains(type) {
             button.isEnabled = state
           }
@@ -376,13 +374,13 @@ class ChooWindowOperationButtonManager: NSView {
       let defaultButtons = [
         window?.standardWindowButton(.closeButton),
         window?.standardWindowButton(.miniaturizeButton),
-        window?.standardWindowButton(.zoomButton)
+        window?.standardWindowButton(.zoomButton),
       ]
       defaultButtons.forEach {
         if let button = $0 {
           let index = defaultButtons.firstIndex(of: button)!
           let type = IndexToButtonTypes[index]!
-          
+
           if types.contains(type) {
             button.isEnabled = state
           }
@@ -395,4 +393,3 @@ class ChooWindowOperationButtonManager: NSView {
     fatalError("init(coder:) has not been implemented")
   }
 }
-

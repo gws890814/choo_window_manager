@@ -236,7 +236,6 @@ class _MyAppState extends State<MyApp>
                       },
                     ),
                     onEnter: (event) {
-                      print('object');
                       ChooAppBar.of(context)?.spread = false;
                     },
                     onExit: (event) {
