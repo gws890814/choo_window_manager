@@ -161,16 +161,17 @@ class _MyAppState extends State<MyApp>
 
   @override
   Future<bool> onKeyboard(event) async {
+    print("我收到了喔");
     // TODO: implement onKeyboard
-    if (event.modifierFlags.contains(ModifierFlags.command)) {
-      if ([0, 13].contains(event.keyCode)) {
-        return true;
-      } else if (12 == event.keyCode) {
-        ChooWindowManager.destroy();
-        return false;
-      }
-    }
-    return event.modifierFlags.isEmpty;
+    // if (event.modifierFlags.contains(ModifierFlags.command)) {
+    //   if ([0, 13].contains(event.keyCode)) {
+    //     return true;
+    //   } else if (12 == event.keyCode) {
+    //     ChooWindowManager.destroy();
+    //     return false;
+    //   }
+    // }
+    return true;
   }
 
   @override
@@ -234,12 +235,13 @@ class _MyAppState extends State<MyApp>
                         print('click');
                       },
                     ),
-                    // onEnter: (event) {
-                    //   ChooAppBar.of(context)?.spread = false;
-                    // },
-                    // onExit: (event) {
-                    //   ChooAppBar.of(context)?.spread = true;
-                    // },
+                    onEnter: (event) {
+                      print('object');
+                      ChooAppBar.of(context)?.spread = false;
+                    },
+                    onExit: (event) {
+                      ChooAppBar.of(context)?.spread = true;
+                    },
                   ),
                 ),
               );
@@ -250,7 +252,7 @@ class _MyAppState extends State<MyApp>
           initialSettings: InAppWebViewSettings(
             javaScriptCanOpenWindowsAutomatically: true,
           ),
-          initialUrlRequest: URLRequest(url: WebUri("https://www.google.com")),
+          initialUrlRequest: URLRequest(url: WebUri("https://www.baidu.com")),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:choo_window_manager/src/window_manager.dart';
+import 'package:flutter/services.dart';
 
 part 'app_bar.dart';
 
@@ -14,6 +15,10 @@ class WindowPanWidget extends StatefulWidget {
   /// 子控件
   final Widget child;
 
+  final void Function(PointerEnterEvent event)? onEnter;
+  final void Function(PointerExitEvent event)? onExit;
+  final void Function(PointerHoverEvent event)? onHover;
+
   /// 是否展开模式
   /// 当为true时，child内的手势将不会影响阻止拖动
   /// 当为false时（默认），child内的手势将影响阻止拖动
@@ -22,7 +27,14 @@ class WindowPanWidget extends StatefulWidget {
   /// 构造函数
   /// @param key - 控件key
   /// @param child - 子控件
-  const WindowPanWidget({super.key, required this.child, this.spread = false});
+  const WindowPanWidget({
+    super.key,
+    required this.child,
+    this.onEnter,
+    this.onExit,
+    this.onHover,
+    this.spread = false,
+  });
 
   @override
   State<WindowPanWidget> createState() => _WindowPanState();
@@ -92,10 +104,12 @@ class _WindowPanState extends State<WindowPanWidget> with WindowManagerEvent {
       child: MouseRegion(
         // 鼠标进入区域时添加预拖动监听器
         onEnter: (event) {
+          widget.onEnter?.call(event);
           WindowManagerEvent.addPrePanListener(this);
         },
         // 鼠标离开区域时移除预拖动监听器
         onExit: (event) {
+          widget.onExit?.call(event);
           WindowManagerEvent.removePrePanListener(this);
         },
         child: child,

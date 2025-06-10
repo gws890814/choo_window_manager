@@ -148,6 +148,12 @@ class ChooWindowOperationButtonManager: NSView {
   private var buttons: [NSButton?] = []
 
   private var anchor: ChooWindowOperationAnchor!
+  
+  private var _isEnter: Bool = false
+  
+  public var isEnter: Bool {
+    get { _isEnter }
+  }
 
   public override var isFlipped: Bool { true }
   public override var window: NSWindow? {
@@ -302,6 +308,7 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   override func mouseEntered(with event: NSEvent) {
+    window?.isMovable = true
     _hover = true
     buttons.forEach {
       if let button = $0 {
@@ -311,6 +318,7 @@ class ChooWindowOperationButtonManager: NSView {
   }
 
   override func mouseExited(with event: NSEvent) {
+    window?.isMovable = false
     _hover = false
     buttons.forEach {
       if let button = $0 {

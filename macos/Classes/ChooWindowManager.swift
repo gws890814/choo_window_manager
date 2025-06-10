@@ -677,7 +677,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     if titleBarStyle == .hidden {
       window.titlebarAppearsTransparent = true
       window.styleMask.insert([.fullSizeContentView])
-
+      
       customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
       setMovable(["isMovable": false])
       customTitleBar?.enabled = true
@@ -1042,6 +1042,7 @@ extension ChooWindowManager {
   private struct AssociatedKeys {
     static var allowClosing: Bool? = nil
     static var AllowKeyboard = UnsafeRawPointer(bitPattern: "AllowKeyboard".hashValue)!
+    static var keyboardEvent = UnsafeRawPointer(bitPattern: "keyboardEvent".hashValue)!
   }
 
   /// 窗口是否允许关闭的标志
@@ -1068,13 +1069,24 @@ extension ChooWindowManager {
   /// - 当为nil时，表示没有正在处理的键盘事件
   ///
   /// 主要用于防止键盘事件的重复处理和管理事件的生命周期
-  var AllowKeyboard: NSEvent? {
+  var AllowKeyboard: Bool {
     get {
-      return objc_getAssociatedObject(self, &AssociatedKeys.AllowKeyboard) as? NSEvent
+      return objc_getAssociatedObject(self, &AssociatedKeys.AllowKeyboard) as? Bool ?? false
     }
     set(value) {
       objc_setAssociatedObject(
         self, &AssociatedKeys.AllowKeyboard, value,
+        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+  }
+  
+  var keyboardEvent: NSEvent? {
+    get {
+      return objc_getAssociatedObject(self, &AssociatedKeys.keyboardEvent) as? NSEvent
+    }
+    set(value) {
+      objc_setAssociatedObject(
+        self, &AssociatedKeys.keyboardEvent, value,
         objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
@@ -1309,7 +1321,7 @@ extension ChooWindowManager {
       [weak self] event in
       guard let self = self else { return event }
 
-      if self.AllowKeyboard == nil {
+      if !self.AllowKeyboard && self.keyboardEvent != event {
         var modifierFlags: [String] = []
         if event.modifierFlags.contains(.shift) {
           modifierFlags.append("shift")
@@ -1349,24 +1361,28 @@ extension ChooWindowManager {
           ],
           callback: { id, args in
             if args as? Bool ?? true {
-              self.AllowKeyboard = event
-              NSApp.sendEvent(event)
+              self.keyboardEvent = nil
+              self.AllowKeyboard = true
+              self.window.sendEvent(event)
             }
           }
         )
         return nil
       }
 
-      self.AllowKeyboard = nil
+      self.AllowKeyboard = false
 
       if event.modifierFlags.contains(.command) && event.keyCode == 13 {
         self.close()
         return nil
       }
       
-      print("这里死循环")
-
-      return event
+      if keyboardEvent == nil {
+        keyboardEvent = event
+        return event
+      }
+            
+      return keyboardEvent == event ? nil : event
     }
   }
 
