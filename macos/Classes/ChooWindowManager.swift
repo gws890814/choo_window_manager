@@ -1226,7 +1226,7 @@ extension ChooWindowManager {
   /// 该方法会在窗口即将进入全屏模式时被调用
   /// 发送willEnterFullScreen事件
   public func windowWillEnterFullScreen(_ notification: Notification) {
-    customTitleBar?.enabled = false
+    setTitleBarStyle(args: ["titleBarStyle": "visible"])
     emitEvent("willEnterFullScreen", args: nil)
   }
 
@@ -1242,7 +1242,7 @@ extension ChooWindowManager {
 
   /// 发送willLeaveFullScreen事件
   public func windowWillExitFullScreen(_ notification: Notification) {
-    customTitleBar?.enabled = true
+    setTitleBarStyle(args: ["titleBarStyle": "hidden"])
     emitEvent("willLeaveFullScreen", args: nil)
   }
 
