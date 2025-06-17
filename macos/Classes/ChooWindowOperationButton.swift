@@ -44,13 +44,16 @@ private class SetInterval {
   }
   
   func resume() {
-      guard !isRunning else { return }
-      
-      isRunning = true
-      // 计算剩余时间，确保间隔准确
-      let remaining = max(nextDeadline.uptimeNanoseconds - DispatchTime.now().uptimeNanoseconds, 0)
-      nextDeadline = .now() + Double(remaining) / 1_000_000_000
-      scheduleNext()
+    guard !isRunning else { return }
+    
+    isRunning = true
+    // 计算剩余时间，确保间隔准确
+    let remaining = max(
+        Int64(nextDeadline.uptimeNanoseconds) - Int64(DispatchTime.now().uptimeNanoseconds),
+        0
+    )
+    nextDeadline = .now() + Double(remaining) / 1_000_000_000
+    scheduleNext()
   }
   
   func stop() {
@@ -200,8 +203,18 @@ private class ChooWindowOperationAnchor: NSObject {
 
 class ImitateButtonView: NSView {
   
+  private var _isHitTest: Bool = false
+  public var isHitTest: Bool {
+    get {
+      _isHitTest
+    }
+    set {
+      _isHitTest = newValue
+    }
+  }
+  
   override func hitTest(_ point: NSPoint) -> NSView? {
-    return nil
+    return isHitTest ? self : nil
   }
 
   init() {
@@ -213,9 +226,18 @@ class ImitateButtonView: NSView {
 }
 
 class ImitateButtonIconView: NSImageView {
+  private var _isHitTest: Bool = false
+  public var isHitTest: Bool {
+    get {
+      _isHitTest
+    }
+    set {
+      _isHitTest = newValue
+    }
+  }
   
   override func hitTest(_ point: NSPoint) -> NSView? {
-    return nil
+    return isHitTest ? self : nil
   }
 
   init(image: NSImage) {
@@ -296,6 +318,8 @@ class ImitateButton: NSView {
     .miniaturizeButton: NSColor(srgbRed: 254 / 255, green: 188 / 255, blue: 46 / 255, alpha: 1).cgColor,
     .zoomButton: NSColor(srgbRed: 40 / 255, green: 200 / 255, blue: 64 / 255, alpha: 1).cgColor,
   ]
+  
+  private static let buttonDisableColor = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.25).cgColor
 
   private let _window: NSWindow
   private var trackingArea: NSTrackingArea?
@@ -306,6 +330,7 @@ class ImitateButton: NSView {
     set {
       _isEnabled = newValue
       windowButton?.isEnabled = newValue
+      setBackgroundColorState(newValue)
     }
   }
 
@@ -314,6 +339,8 @@ class ImitateButton: NSView {
   private var _backgroundConstraints: [String: NSLayoutConstraint] = [:]
 
   private var _buttonType: NSWindow.ButtonType
+  private var dispatchInterval: SetInterval?
+  
   public var buttonType: NSWindow.ButtonType { _buttonType }
 
   private var _iconName: String? {
@@ -410,6 +437,14 @@ class ImitateButton: NSView {
     _window = NSWindow()
     super.init(coder: coder)
   }
+  
+  public func setBackgroundColorState(_ state: Bool) {
+    if !state {
+      layer?.backgroundColor = ImitateButton.buttonDisableColor
+    } else {
+      layer?.backgroundColor = ImitateButton.buttonColorMap[buttonType]
+    }
+  }
 
   private func initConstraints() {
     _backgroundConstraints.merge([
@@ -459,9 +494,7 @@ class ImitateButton: NSView {
     layoutSubtreeIfNeeded()
     addTrackingArea()
   }
-  
-  private var dispatchInterval: SetInterval?
-  
+    
   private func containsMouseLocation() -> Bool {
     // 获取鼠标在屏幕坐标系中的位置
     let mouseLocation = NSEvent.mouseLocation
@@ -510,18 +543,24 @@ class ImitateButton: NSView {
   }
   
   override func mouseEntered(with event: NSEvent) {
-    dispatchInterval?.stop()
-    dispatchInterval = SetInterval(interval: 0.2) {
-//      print()
-      self.windowButton?.state = .mixed
-      if NSEvent.pressedMouseButtons & (1 << 0) != 0 && self.containsMouseLocation() {
-        self.backgroundView.alphaValue = 0.5
-      } else if self.backgroundView.alphaValue == 0.5 {
-        self.backgroundView.alphaValue = 0
-        self.windowButton?.state = .off
-      }
+    if !isEnabled {
+      return
     }
-    dispatchInterval?.start()
+    if let dispatchInterval = dispatchInterval {
+      dispatchInterval.stop()
+      dispatchInterval.resume()
+    } else {
+      dispatchInterval = SetInterval(interval: 0.2) {
+        self.windowButton?.state = .mixed
+        if NSEvent.pressedMouseButtons & (1 << 0) != 0 && self.containsMouseLocation() {
+          self.backgroundView.alphaValue = 0.5
+        } else if self.backgroundView.alphaValue == 0.5 {
+          self.backgroundView.alphaValue = 0
+          self.windowButton?.state = .off
+        }
+      }
+      dispatchInterval?.start()
+    }
     super.mouseEntered(with: event)
   }
   
@@ -529,9 +568,7 @@ class ImitateButton: NSView {
     if NSEvent.pressedMouseButtons & (1 << 0) != 0 {
       return
     }
-    
     dispatchInterval?.stop()
-    dispatchInterval = nil
     backgroundView.alphaValue = 0
     windowButton?.state = .off
   }
@@ -635,8 +672,7 @@ class ChooWindowOperationButtonManager: NSView {
     
     super.init(frame: .zero)
     
-    contentView = ImitateContent() {
-      type in
+    contentView = ImitateContent() { type in
       var alphaValue: CGFloat = 0
       window.isMovable = false
       if type == .mouseEntered || NSEvent.pressedMouseButtons & (1 << 0) != 0 {
@@ -644,6 +680,7 @@ class ChooWindowOperationButtonManager: NSView {
         window.isMovable = true
       }
       self.buttons.forEach { button in
+        if !button.isEnabled { return }
         button.iconView?.alphaValue = alphaValue
         button.windowButton?.state = .off
       }
@@ -785,6 +822,12 @@ class ChooWindowOperationButtonManager: NSView {
           }
         }
       }
+    }
+  }
+  
+  public func setWindowState(_ state: Bool) {
+    buttons.forEach { button in
+      button.setBackgroundColorState(state)
     }
   }
 

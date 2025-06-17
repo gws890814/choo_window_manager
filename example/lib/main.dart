@@ -14,6 +14,7 @@ void main(List<dynamic> args) async {
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
         regionPosition: WindowButtonRegionPosition(y: 0, x: 10),
+        // enabledButtons: [],
         // buttonSize: Size(12, 12),
         // spacing: 50,
         // height: 40,
@@ -241,7 +242,7 @@ class _MyAppState extends State<MyApp>
             builder: (context) {
               return Container(
                 height: double.infinity,
-                color: Colors.red,
+                color: Colors.red, // Color.fromRGBO(58, 62, 64, 1),
                 child: Center(
                   child: MouseRegion(
                     child: GestureDetector(

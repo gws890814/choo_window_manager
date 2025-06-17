@@ -1184,6 +1184,7 @@ extension ChooWindowManager {
   /// 2. 发送focus事件
   public func windowDidBecomeMain(_ notification: Notification) {
     addKeyboardEvent()
+    customTitleBar?.setWindowState(true)
     emitEvent("focus", args: nil)
   }
 
@@ -1196,6 +1197,7 @@ extension ChooWindowManager {
   /// 2. 发送blur事件
   public func windowDidResignMain(_ notification: Notification) {
     removeKeyboardEvent()
+    customTitleBar?.setWindowState(false)
     emitEvent("blur", args: nil)
   }
 
