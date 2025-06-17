@@ -511,13 +511,14 @@ class ImitateButton: NSView {
   
   override func mouseEntered(with event: NSEvent) {
     dispatchInterval?.stop()
-    dispatchInterval = SetInterval(interval: 0.3) {
+    dispatchInterval = SetInterval(interval: 0.2) {
 //      print()
       self.windowButton?.state = .mixed
       if NSEvent.pressedMouseButtons & (1 << 0) != 0 && self.containsMouseLocation() {
         self.backgroundView.alphaValue = 0.5
       } else if self.backgroundView.alphaValue == 0.5 {
         self.backgroundView.alphaValue = 0
+        self.windowButton?.state = .off
       }
     }
     dispatchInterval?.start()
@@ -531,7 +532,8 @@ class ImitateButton: NSView {
     
     dispatchInterval?.stop()
     dispatchInterval = nil
-    backgroundView.alphaValue = 0.01
+    backgroundView.alphaValue = 0
+    windowButton?.state = .off
   }
 
 }
@@ -643,6 +645,7 @@ class ChooWindowOperationButtonManager: NSView {
       }
       self.buttons.forEach { button in
         button.iconView?.alphaValue = alphaValue
+        button.windowButton?.state = .off
       }
     }
 
