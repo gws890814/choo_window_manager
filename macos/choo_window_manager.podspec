@@ -20,7 +20,9 @@ A new Flutter plugin project.
   # data, update the PrivacyInfo.xcprivacy file to describe your plugin's
   # privacy impact, and then uncomment this line. For more information,
   # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
-  s.resource_bundles = {'choo_window_manager' => ['Resources/**/*']}
+  s.resource_bundles = {
+    'choo_window_manager' => ['Resources/**/*']
+  }
 
   s.dependency 'FlutterMacOS'
 
