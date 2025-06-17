@@ -12,6 +12,13 @@ void main(List<dynamic> args) async {
       windowId,
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
+      buttonOptions: WindowButtonOptions(
+        regionPosition: WindowButtonRegionPosition(y: 0, x: 10),
+        // buttonSize: Size(12, 12),
+        // spacing: 50,
+        // height: 40,
+        // hiddenButtons: [WindowButtonType.close],
+      ),
       // offset: Offset(0, 0),
       // size: Size(500, 300),
       animationBehavior: WindowAnimationBehavior.documentWindow,
@@ -28,7 +35,7 @@ void main(List<dynamic> args) async {
       //   );
       // });
       // await Future.delayed(Duration(milliseconds: 1000), () {
-      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      //   ChooWindowManager.current.setWindowButtonSize(Size(20, 20));
       // });
       // await Future.delayed(Duration(milliseconds: 1000), () async {
       //   ChooWindowManager.current.setWindowButtonHidden(
@@ -40,10 +47,16 @@ void main(List<dynamic> args) async {
       //   ChooWindowManager.current.setWindowButtonSize(Size(30, 30));
       // });
       // await Future.delayed(Duration(milliseconds: 1000), () {
-      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.visible);
+      //   ChooWindowManager.current.setWindowButtonHidden(
+      //     state: true,
+      //     types: [WindowButtonType.zoom],
+      //   );
       // });
       // await Future.delayed(Duration(milliseconds: 3000), () {
-      //   ChooWindowManager.current.setTitleStyle(WindowTitleVisibility.hidden);
+      //   ChooWindowManager.current.setWindowButtonHidden(
+      //     state: false,
+      //     types: [WindowButtonType.zoom],
+      //   );
       // });
       // await window.focus();
       // Offset position = await window.getPosition();
@@ -219,7 +232,9 @@ class _MyAppState extends State<MyApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      color: Colors.red,
       home: Scaffold(
+        backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
           child: Builder(
@@ -247,11 +262,20 @@ class _MyAppState extends State<MyApp>
             },
           ),
         ),
-        body: InAppWebView(
-          initialSettings: InAppWebViewSettings(
-            javaScriptCanOpenWindowsAutomatically: true,
+        body: Container(
+          color: Colors.red,
+          child: Center(
+            child: InAppWebView(
+              initialSettings: InAppWebViewSettings(
+                underPageBackgroundColor: Colors.red,
+                // accessibilityIgnoresInvertColors:
+                // javaScriptCanOpenWindowsAutomatically: true,
+              ),
+              initialUrlRequest: URLRequest(
+                url: WebUri("https://www.google.com"),
+              ),
+            ),
           ),
-          initialUrlRequest: URLRequest(url: WebUri("https://www.baidu.com")),
         ),
       ),
     );
