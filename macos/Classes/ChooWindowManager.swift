@@ -945,6 +945,9 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       } else {
         windowLocation = self.panStartPoint!
       }
+      if self.customTitleBar?.enabled ?? false && self.customTitleBar?.frame.contains(windowLocation) ?? false {
+        return event
+      }
       guard
         let event = NSEvent.mouseEvent(
           with: .leftMouseDragged,
