@@ -418,6 +418,7 @@ class ImitateButton: NSView {
     wantsLayer = true
     translatesAutoresizingMaskIntoConstraints = false
     layer?.backgroundColor = ImitateButton.buttonColorMap[type]
+    
 
     if let windowButton = windowButton {
       addSubview(windowButton)
@@ -444,6 +445,11 @@ class ImitateButton: NSView {
     } else {
       layer?.backgroundColor = ImitateButton.buttonColorMap[buttonType]
     }
+    if _buttonType == .miniaturizeButton {
+      print(state)
+    }
+    
+
   }
 
   private func initConstraints() {
@@ -588,7 +594,7 @@ class ChooWindowOperationButtonManager: NSView {
 
   private var trackingArea: NSTrackingArea?
 
-  private var buttons: [ImitateButton] = []
+  public var buttons: [ImitateButton] = []
   private var contentView: NSView?
 
   private var anchor: ChooWindowOperationAnchor!
@@ -827,6 +833,9 @@ class ChooWindowOperationButtonManager: NSView {
   
   public func setWindowState(_ state: Bool) {
     buttons.forEach { button in
+      if !button.isEnabled && state {
+        return
+      }
       button.setBackgroundColorState(state)
     }
   }

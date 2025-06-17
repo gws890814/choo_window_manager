@@ -286,10 +286,7 @@ class ChooWindowManager {
     _init(options, callback);
   }
 
-  // Private constructor for testing purposes
-  ChooWindowManager._test(this.id, this._windowChannel) {
-    _windowChannel.setMethodCallHandler(_windowChannelHandler);
-  }
+
 
   /// 处理原生端发来的MethodCall事件，根据事件类型分发到对应的回调或事件处理方法
   ///

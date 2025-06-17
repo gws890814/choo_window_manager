@@ -1043,6 +1043,7 @@ extension ChooWindowManager {
     static var allowClosing: Bool? = nil
     static var AllowKeyboard = UnsafeRawPointer(bitPattern: "AllowKeyboard".hashValue)!
     static var keyboardEvent = UnsafeRawPointer(bitPattern: "keyboardEvent".hashValue)!
+    static var miniButtonState = UnsafeRawPointer(bitPattern: "miniButtonState".hashValue)!
   }
 
   /// 窗口是否允许关闭的标志
@@ -1087,6 +1088,17 @@ extension ChooWindowManager {
     set(value) {
       objc_setAssociatedObject(
         self, &AssociatedKeys.keyboardEvent, value,
+        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+  }
+  
+  var miniButtonState: Bool {
+    get {
+      return objc_getAssociatedObject(self, &AssociatedKeys.miniButtonState) as? Bool ?? true
+    }
+    set(value) {
+      objc_setAssociatedObject(
+        self, &AssociatedKeys.miniButtonState, value,
         objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
@@ -1228,6 +1240,7 @@ extension ChooWindowManager {
   /// 该方法会在窗口即将进入全屏模式时被调用
   /// 发送willEnterFullScreen事件
   public func windowWillEnterFullScreen(_ notification: Notification) {
+    miniButtonState = customTitleBar?.buttons[1].isEnabled ?? true
     setTitleBarStyle(args: ["titleBarStyle": "visible"])
     emitEvent("willEnterFullScreen", args: nil)
   }
@@ -1245,6 +1258,7 @@ extension ChooWindowManager {
   /// 发送willLeaveFullScreen事件
   public func windowWillExitFullScreen(_ notification: Notification) {
     setTitleBarStyle(args: ["titleBarStyle": "hidden"])
+    customTitleBar?.setButtonEnabled([.miniaturizeButton], state: miniButtonState)
     emitEvent("willLeaveFullScreen", args: nil)
   }
 
