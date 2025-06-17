@@ -203,18 +203,8 @@ private class ChooWindowOperationAnchor: NSObject {
 
 class ImitateButtonView: NSView {
   
-  private var _isHitTest: Bool = false
-  public var isHitTest: Bool {
-    get {
-      _isHitTest
-    }
-    set {
-      _isHitTest = newValue
-    }
-  }
-  
   override func hitTest(_ point: NSPoint) -> NSView? {
-    return isHitTest ? self : nil
+    return nil
   }
 
   init() {
@@ -226,18 +216,9 @@ class ImitateButtonView: NSView {
 }
 
 class ImitateButtonIconView: NSImageView {
-  private var _isHitTest: Bool = false
-  public var isHitTest: Bool {
-    get {
-      _isHitTest
-    }
-    set {
-      _isHitTest = newValue
-    }
-  }
   
   override func hitTest(_ point: NSPoint) -> NSView? {
-    return isHitTest ? self : nil
+    return nil
   }
 
   init(image: NSImage) {
@@ -445,11 +426,6 @@ class ImitateButton: NSView {
     } else {
       layer?.backgroundColor = ImitateButton.buttonColorMap[buttonType]
     }
-    if _buttonType == .miniaturizeButton {
-      print(state)
-    }
-    
-
   }
 
   private func initConstraints() {
@@ -559,8 +535,8 @@ class ImitateButton: NSView {
       dispatchInterval = SetInterval(interval: 0.2) {
         self.windowButton?.state = .mixed
         if NSEvent.pressedMouseButtons & (1 << 0) != 0 && self.containsMouseLocation() {
-          self.backgroundView.alphaValue = 0.5
-        } else if self.backgroundView.alphaValue == 0.5 {
+          self.backgroundView.alphaValue = 0.3
+        } else if self.backgroundView.alphaValue == 0.3 {
           self.backgroundView.alphaValue = 0
           self.windowButton?.state = .off
         }
@@ -829,6 +805,14 @@ class ChooWindowOperationButtonManager: NSView {
         }
       }
     }
+  }
+  
+  public override func mouseUp(with event: NSEvent) {
+    if let windowManager = self.window?.delegate as? ChooWindowManager {
+      windowManager.focus()
+    }
+    setWindowState(true)
+    super.mouseUp(with: event)
   }
   
   public func setWindowState(_ state: Bool) {

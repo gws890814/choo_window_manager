@@ -34,7 +34,7 @@ void main() {
     });
 
     test('ChooWindowManager.ready initializes correctly', () async {
-      final options = ChooWindowOptions(id: 1, title: 'Test Window');
+      final options = ChooWindowOptions(1, title: 'Test Window');
       ChooWindowManager? initializedWindow;
 
       ChooWindowManager.ready(options, (window) {
@@ -58,12 +58,10 @@ void main() {
     });
 
     test('ChooWindowManager.current is set after ready', () async {
-      final options = ChooWindowOptions(id: 2, title: 'Another Window');
+      final options = ChooWindowOptions(2, title: 'Another Window');
       ChooWindowManager.ready(options, (window) {});
       await Future.delayed(Duration.zero);
       expect(ChooWindowManager.current.id, 2);
     });
-  });
-
   });
 }

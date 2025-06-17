@@ -238,6 +238,7 @@ class _MyAppState extends State<MyApp>
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
+          height: 120,
           child: Builder(
             builder: (context) {
               return Container(
