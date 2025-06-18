@@ -291,6 +291,7 @@ class ImitateContent: NSView {
 }
 
 class ImitateButton: NSView {
+  private static var imageCache: [String:NSImage] = [:]
   private static let buttonIconImageMap: [NSWindow.ButtonType: String] = [
     .closeButton: "close",
     .miniaturizeButton: "mini",
@@ -330,6 +331,17 @@ class ImitateButton: NSView {
   private var _iconName: String? {
     return ImitateButton.buttonIconImageMap[buttonType]
   }
+  
+  public var iconName: String? {
+    get {
+      ImitateButton.buttonIconImageMap[buttonType]
+    }
+    set {
+      if let icon = newValue {
+        iconView?.image = getImage(icon)
+      }
+    }
+  }
 
   private var _round: CGFloat = 0
   public var round: CGFloat {
@@ -362,20 +374,11 @@ class ImitateButton: NSView {
       return iconView
     } else {
       if let iconName = _iconName {
-        let mainBundle = Bundle(for: Self.self)
-        if let resourceBundleURL = mainBundle.url(
-          forResource: "choo_window_manager", withExtension: "bundle")
-        {
-          if let resourceBundle = Bundle(url: resourceBundleURL) {
-            if let imagePath = resourceBundle.url(forResource: iconName, withExtension: "svg") {
-              let image = NSImage(contentsOf: imagePath)!
-              let view = ImitateButtonIconView(image: image)
-              view.translatesAutoresizingMaskIntoConstraints = false
-              view.alphaValue = 0
-              _iconView = view
-            }
-          }
-        }
+        let image = getImage(iconName)
+        let view = ImitateButtonIconView(image: image!)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.alphaValue = 0
+        _iconView = view
       }
       return _iconView
     }
@@ -429,6 +432,25 @@ class ImitateButton: NSView {
     } else {
       layer?.backgroundColor = ImitateButton.buttonColorMap[buttonType]
     }
+  }
+  
+  private func getImage(_ iconName: String) -> NSImage? {
+    if let image = ImitateButton.imageCache[iconName] {
+      return image
+    }
+    let mainBundle = Bundle(for: Self.self)
+    if let resourceBundleURL = mainBundle.url(
+      forResource: "choo_window_manager", withExtension: "bundle")
+    {
+      if let resourceBundle = Bundle(url: resourceBundleURL) {
+        if let imagePath = resourceBundle.url(forResource: iconName, withExtension: "svg") {
+          let image = NSImage(contentsOf: imagePath)!
+          ImitateButton.imageCache[iconName] = image
+          return image
+        }
+      }
+    }
+    return nil
   }
 
   private func initConstraints() {
@@ -577,6 +599,7 @@ class ChooWindowOperationButtonManager: NSView {
   private var contentView: ImitateContent?
 
   private var anchor: ChooWindowOperationAnchor!
+  private var monitorEvent: Any?
 
   private var _isEnter: Bool = false
 
@@ -654,7 +677,7 @@ class ChooWindowOperationButtonManager: NSView {
     ])
     
     super.init(frame: .zero)
-        
+    
     contentView = ImitateContent() { type in
       var alphaValue: CGFloat = 0
       window.isMovable = false
@@ -719,6 +742,15 @@ class ChooWindowOperationButtonManager: NSView {
     anchor.left = left!
     anchor.spacing = spacing
     anchor.btnSize = btnSize
+    
+    monitorEvent = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {event in
+      if event.modifierFlags.contains(.option) {
+        self.buttons[2].iconName = "add"
+      } else {
+        self.buttons[2].iconName = "fullscreen"
+      }
+      return event
+    }
 
     window?.contentView?.addSubview(self)
     NSLayoutConstraint.activate(anchor.constraints)
@@ -728,6 +760,12 @@ class ChooWindowOperationButtonManager: NSView {
   private func hide() {
     var buttonHiddenStatus: [NSWindow.ButtonType: Bool] = [:]
     var buttonEnabledStatus: [NSWindow.ButtonType: Bool] = [:]
+    
+    if let monitorEvent = monitorEvent {
+      NSEvent.removeMonitor(monitorEvent)
+      self.monitorEvent = nil
+    }
+    
     buttons.forEach { button in
       let index = buttons.firstIndex(of: button)!
       buttonHiddenStatus[IndexToButtonTypes[index]!] = button.isHidden
