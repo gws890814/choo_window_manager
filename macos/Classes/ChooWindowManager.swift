@@ -139,9 +139,10 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 该方法会执行以下操作：
   /// 1. 激活应用程序（不忽略其他应用）
   /// 2. 将窗口设置为主窗口并置于前台
-  public func focus() {
-    NSApp.activate(ignoringOtherApps: false)
-    window.makeKeyAndOrderFront(nil)
+  public func focus(_ force: Bool = false) {
+    NSApp.activate(ignoringOtherApps: force)
+    self.window.makeKeyAndOrderFront(nil)
+    self.window.makeFirstResponder(self.window.contentView)
   }
 
   /// 使窗口失去焦点
@@ -677,7 +678,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
     if titleBarStyle == .hidden {
       window.titlebarAppearsTransparent = true
       window.styleMask.insert([.fullSizeContentView])
-      
+
       customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
       setMovable(["isMovable": false])
       customTitleBar?.enabled = true
@@ -945,9 +946,7 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
       } else {
         windowLocation = self.panStartPoint!
       }
-      if self.customTitleBar?.enabled ?? false && self.customTitleBar?.frame.contains(windowLocation) ?? false {
-        return event
-      }
+      
       guard
         let event = NSEvent.mouseEvent(
           with: .leftMouseDragged,
@@ -1047,6 +1046,7 @@ extension ChooWindowManager {
     static var AllowKeyboard = UnsafeRawPointer(bitPattern: "AllowKeyboard".hashValue)!
     static var keyboardEvent = UnsafeRawPointer(bitPattern: "keyboardEvent".hashValue)!
     static var miniButtonState = UnsafeRawPointer(bitPattern: "miniButtonState".hashValue)!
+    static var fullscreenTitlebarStyle = UnsafeRawPointer(bitPattern: "fullscreenTitlebarStyle".hashValue)!
   }
 
   /// 窗口是否允许关闭的标志
@@ -1083,7 +1083,7 @@ extension ChooWindowManager {
         objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
-  
+
   var keyboardEvent: NSEvent? {
     get {
       return objc_getAssociatedObject(self, &AssociatedKeys.keyboardEvent) as? NSEvent
@@ -1094,7 +1094,7 @@ extension ChooWindowManager {
         objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
-  
+
   var miniButtonState: Bool {
     get {
       return objc_getAssociatedObject(self, &AssociatedKeys.miniButtonState) as? Bool ?? true
@@ -1102,6 +1102,17 @@ extension ChooWindowManager {
     set(value) {
       objc_setAssociatedObject(
         self, &AssociatedKeys.miniButtonState, value,
+        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+  }
+  
+  var fullscreenTitlebarStyle: NSWindow.TitleVisibility? {
+    get {
+      return objc_getAssociatedObject(self, &AssociatedKeys.fullscreenTitlebarStyle) as? NSWindow.TitleVisibility
+    }
+    set(value) {
+      objc_setAssociatedObject(
+        self, &AssociatedKeys.fullscreenTitlebarStyle, value,
         objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
   }
@@ -1203,6 +1214,12 @@ extension ChooWindowManager {
     emitEvent("focus", args: nil)
   }
 
+  //  public func windowDidBecomeKey(_ notification: Notification) {
+  //    addKeyboardEvent()
+  //    customTitleBar?.setWindowState(true)
+  //    emitEvent("focus", args: nil)
+  //  }
+
   /// 窗口失去主窗口状态时的回调方法
   ///
   /// - Parameter notification: 通知对象
@@ -1215,6 +1232,12 @@ extension ChooWindowManager {
     customTitleBar?.setWindowState(false)
     emitEvent("blur", args: nil)
   }
+
+  //  public func windowDidResignKey(_ notification: Notification) {
+  //    removeKeyboardEvent()
+  //    customTitleBar?.setWindowState(false)
+  //    emitEvent("blur", args: nil)
+  //  }
 
   /// 窗口最小化时的回调方法
   ///
@@ -1243,8 +1266,11 @@ extension ChooWindowManager {
   /// 该方法会在窗口即将进入全屏模式时被调用
   /// 发送willEnterFullScreen事件
   public func windowWillEnterFullScreen(_ notification: Notification) {
+    fullscreenTitlebarStyle = window.titleVisibility
+    if fullscreenTitlebarStyle == .hidden {
+      setTitleBarStyle(args: ["titleBarStyle": "visible"])
+    }
     miniButtonState = customTitleBar?.buttons[1].isEnabled ?? true
-    setTitleBarStyle(args: ["titleBarStyle": "visible"])
     emitEvent("willEnterFullScreen", args: nil)
   }
 
@@ -1260,7 +1286,10 @@ extension ChooWindowManager {
 
   /// 发送willLeaveFullScreen事件
   public func windowWillExitFullScreen(_ notification: Notification) {
-    setTitleBarStyle(args: ["titleBarStyle": "hidden"])
+    if fullscreenTitlebarStyle == .hidden {
+      setTitleBarStyle(args: ["titleBarStyle": "hidden"])
+    }
+    fullscreenTitlebarStyle = nil
     customTitleBar?.setButtonEnabled([.miniaturizeButton], state: miniButtonState)
     emitEvent("willLeaveFullScreen", args: nil)
   }
@@ -1396,12 +1425,12 @@ extension ChooWindowManager {
         self.close()
         return nil
       }
-      
+
       if keyboardEvent == nil {
         keyboardEvent = event
         return event
       }
-            
+
       return keyboardEvent == event ? nil : event
     }
   }
@@ -1428,65 +1457,65 @@ extension ChooWindowManager {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     let buttonTypes: [NSWindow.ButtonType] = buttons.filter {
       return StringToButtonType[$0] != nil
-    } .map {
+    }.map {
       return StringToButtonType[$0]!
     }
     customTitleBar?.setButtonHidden(buttonTypes, state: state)
   }
-  
+
   public func setWindowButtonEnabled(_ buttons: [String], state: Bool) {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     let buttonTypes: [NSWindow.ButtonType] = buttons.filter {
       return StringToButtonType[$0] != nil
-    } .map {
+    }.map {
       return StringToButtonType[$0]!
     }
 
     customTitleBar?.setButtonEnabled(buttonTypes, state: state)
   }
-  
+
   public func getWindowButtonRegionPosition() -> CGPoint {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     let left: CGFloat = customTitleBar!.left!
     let top: CGFloat = customTitleBar!.top
-    
+
     return CGPoint(x: left, y: top)
   }
-  
+
   public func setWindowButtonRegionPosition(y: CGFloat, x: CGFloat? = nil) {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     customTitleBar?.left = x
     customTitleBar?.top = y
   }
-  
+
   public func getWindowButtonRegionSize() -> CGSize {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     let width: CGFloat = customTitleBar!.width
     let height: CGFloat = customTitleBar!.height
-    
+
     return CGSize(width: width, height: height)
   }
-  
+
   public func setWindowButtonRegionHeight(height: CGFloat) {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     customTitleBar?.height = height
   }
-  
+
   public func getWindowButtonSpacing() -> CGFloat {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     return customTitleBar!.spacing
   }
-  
+
   public func setWindowButtonSpacing(spacing: CGFloat) {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     customTitleBar?.spacing = spacing
   }
-  
+
   public func getWindowButtonSize() -> CGSize {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     return customTitleBar!.btnSize
   }
-  
+
   public func setWindowButtonSize(_ size: CGSize) {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     customTitleBar?.btnSize = size

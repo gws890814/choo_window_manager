@@ -146,6 +146,7 @@ private class ChooWindowOperationAnchor: NSObject {
         $0.constant = newValue
       }
       widthAnchor.constant = width
+      contentWidthAnchor.constant = width
     }
   }
 
@@ -162,6 +163,7 @@ private class ChooWindowOperationAnchor: NSObject {
       }
       contentHeightAnchor.constant = newValue.height
       widthAnchor.constant = width
+      contentWidthAnchor.constant = width
 
     }
   }
@@ -173,7 +175,7 @@ private class ChooWindowOperationAnchor: NSObject {
     heightAnchor = box.heightAnchor.constraint(equalToConstant: 0)
     
     contentHeightAnchor = content.heightAnchor.constraint(equalToConstant: 0)
-    contentWidthAnchor = content.widthAnchor.constraint(equalTo: box.widthAnchor)
+    contentWidthAnchor = content.widthAnchor.constraint(equalToConstant: 0)
     contentCenterAnchor = content.centerYAnchor.constraint(equalTo: box.centerYAnchor)
 
     closeBtnLeftAnchor = closeBtn.leftAnchor.constraint(equalTo: box.leftAnchor, constant: 0)
@@ -235,7 +237,8 @@ class ImitateButtonIconView: NSImageView {
 class ImitateContent: NSView {
   
   private var _callback: (_ type: NSEvent.EventType) -> Void
-  private var trackingArea: NSTrackingArea?
+  private var mouseEvent: Any?
+  private var dragged: Bool = true
   
   init(_ callback: @escaping (_ type: NSEvent.EventType) -> Void) {
     _callback = callback
@@ -252,39 +255,39 @@ class ImitateContent: NSView {
     super.init(coder: coder)
   }
   
-  override func resizeSubviews(withOldSize oldSize: NSSize) {
-    addTrackingArea()
-  }
-  
   override func viewDidMoveToWindow() {
+    
     if window != nil {
-      addTrackingArea()
-    } else if let trackingArea = self.trackingArea {
-      removeTrackingArea(trackingArea)
+      mouseEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseUp]) { event in
+        let screenLocation = NSEvent.mouseLocation
+        let windowFrame = self.window!.frame
+        let windowLocation = NSPoint(
+          x: screenLocation.x - windowFrame.origin.x,
+          y: screenLocation.y - windowFrame.origin.y
+        )
+        let frame = CGRect(x: self.superview!.frame.origin.x, y: windowFrame.size.height - self.frame.origin.y - self.frame.height, width: self.frame.width, height: self.frame.height)
+        if event.type == .leftMouseDragged {
+          if !self.dragged || frame.contains(windowLocation) {
+            self.dragged = false
+            return nil
+          }
+          return event
+        }
+        
+        if event.type == .leftMouseUp {
+          self.dragged = true
+        }
+        
+        self._callback(frame.contains(windowLocation) ? .mouseEntered : .mouseExited)
+        return event
+      }
+    } else {
+      NSEvent.removeMonitor(mouseEvent!)
+      mouseEvent = nil
     }
 
   }
   
-  override func addTrackingArea(_ trackingArea: NSTrackingArea? = nil) {
-    if let trackingArea = self.trackingArea {
-      removeTrackingArea(trackingArea)
-    }
-    self.trackingArea = trackingArea ?? NSTrackingArea(
-      rect: self.bounds,
-      options: [.activeInKeyWindow, .mouseEnteredAndExited],
-      owner: self,
-      userInfo: nil
-    )
-    super.addTrackingArea(self.trackingArea!)
-  }
-  
-  override func mouseEntered(with event: NSEvent) {
-    _callback(event.type)
-  }
-  
-  override func mouseExited(with event: NSEvent) {
-    _callback(event.type)
-  }
 }
 
 class ImitateButton: NSView {
@@ -294,13 +297,13 @@ class ImitateButton: NSView {
     .zoomButton: "fullscreen",
   ]
   
-  private static let buttonColorMap: [NSWindow.ButtonType: CGColor] = [
+  public static let buttonColorMap: [NSWindow.ButtonType: CGColor] = [
     .closeButton: NSColor(srgbRed: 255 / 255, green: 96 / 255, blue: 86 / 255, alpha: 1).cgColor,
     .miniaturizeButton: NSColor(srgbRed: 254 / 255, green: 188 / 255, blue: 46 / 255, alpha: 1).cgColor,
     .zoomButton: NSColor(srgbRed: 40 / 255, green: 200 / 255, blue: 64 / 255, alpha: 1).cgColor,
   ]
   
-  private static let buttonDisableColor = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.25).cgColor
+  public static let buttonDisableColor = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.25).cgColor
 
   private let _window: NSWindow
   private var trackingArea: NSTrackingArea?
@@ -379,7 +382,7 @@ class ImitateButton: NSView {
   }
 
   private var _backgroundView: ImitateButtonView? = nil
-  private var backgroundView: ImitateButtonView {
+  public var backgroundView: ImitateButtonView {
     if let backgroundView = _backgroundView {
       return backgroundView
     } else {
@@ -571,7 +574,7 @@ class ChooWindowOperationButtonManager: NSView {
   private var trackingArea: NSTrackingArea?
 
   public var buttons: [ImitateButton] = []
-  private var contentView: NSView?
+  private var contentView: ImitateContent?
 
   private var anchor: ChooWindowOperationAnchor!
 
@@ -627,7 +630,6 @@ class ChooWindowOperationButtonManager: NSView {
         anchor.left = newValue
       }
       layoutSubtreeIfNeeded()
-//      addTrackingArea()
     }
   }
   public var btnSize: CGSize {
@@ -636,7 +638,6 @@ class ChooWindowOperationButtonManager: NSView {
       _size = newValue
       anchor.btnSize = newValue
       layoutSubtreeIfNeeded()
-//      addTrackingArea()
     }
   }
 
@@ -653,17 +654,20 @@ class ChooWindowOperationButtonManager: NSView {
     ])
     
     super.init(frame: .zero)
-    
+        
     contentView = ImitateContent() { type in
       var alphaValue: CGFloat = 0
       window.isMovable = false
-      if type == .mouseEntered || NSEvent.pressedMouseButtons & (1 << 0) != 0 {
+      if (type == .mouseEntered && NSEvent.pressedMouseButtons & (1 << 0) == 0) {
         alphaValue = 0.5
         window.isMovable = true
       }
       self.buttons.forEach { button in
         if !button.isEnabled { return }
         button.iconView?.alphaValue = alphaValue
+        if !window.isKeyWindow && !window.isMainWindow {
+          button.layer?.backgroundColor = type == .mouseEntered ? ImitateButton.buttonColorMap[button.buttonType] : ImitateButton.buttonDisableColor
+        }
         button.windowButton?.state = .off
       }
     }
@@ -719,8 +723,6 @@ class ChooWindowOperationButtonManager: NSView {
     window?.contentView?.addSubview(self)
     NSLayoutConstraint.activate(anchor.constraints)
     layoutSubtreeIfNeeded()
-
-//    addTrackingArea(trackingArea)
   }
 
   private func hide() {
@@ -805,14 +807,6 @@ class ChooWindowOperationButtonManager: NSView {
         }
       }
     }
-  }
-  
-  public override func mouseUp(with event: NSEvent) {
-    if let windowManager = self.window?.delegate as? ChooWindowManager {
-      windowManager.focus()
-    }
-    setWindowState(true)
-    super.mouseUp(with: event)
   }
   
   public func setWindowState(_ state: Bool) {

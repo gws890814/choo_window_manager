@@ -14,8 +14,8 @@ void main(List<dynamic> args) async {
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
         regionPosition: WindowButtonRegionPosition(y: 0, x: 10),
-        enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
-        // buttonSize: Size(12, 12),
+        // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
+        // buttonSize: Size(   12, 12),
         // spacing: 50,
         // height: 40,
         // hiddenButtons: [WindowButtonType.close],
@@ -238,17 +238,27 @@ class _MyAppState extends State<MyApp>
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
-          height: 120,
+          // height: 40,
           child: Builder(
             builder: (context) {
               return Container(
                 height: double.infinity,
-                color: Color.fromRGBO(
-                  58,
-                  62,
-                  64,
-                  1,
-                ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
+                // color: Color.fromRGBO(
+                //   58,
+                //   62,
+                //   64,
+                //   1,
+                // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.fromRGBO(61, 61, 61, 1),
+                      Color.fromRGBO(61, 61, 61, 1),
+                    ], // 渐变颜色
+                  ),
+                ),
                 child: Center(
                   child: MouseRegion(
                     child: GestureDetector(
