@@ -238,7 +238,7 @@ class ImitateContent: NSView {
   
   private var _callback: (_ type: NSEvent.EventType) -> Void
   private var mouseEvent: Any?
-  private var dragged: Bool = true
+//  private var dragged: Bool = true
   
   init(_ callback: @escaping (_ type: NSEvent.EventType) -> Void) {
     _callback = callback
@@ -258,7 +258,7 @@ class ImitateContent: NSView {
   override func viewDidMoveToWindow() {
     
     if window != nil {
-      mouseEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseUp]) { event in
+      mouseEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { event in
         let screenLocation = NSEvent.mouseLocation
         let windowFrame = self.window!.frame
         let windowLocation = NSPoint(
@@ -266,22 +266,22 @@ class ImitateContent: NSView {
           y: screenLocation.y - windowFrame.origin.y
         )
         let frame = CGRect(
-          x: self.superview!.frame.origin.x, // - 2,
-          y: windowFrame.size.height - self.frame.origin.y - self.frame.height, // - 2,
-          width: self.frame.width, // + 4,
-          height: self.frame.height, // + 4
+          x: self.superview!.frame.origin.x - 2,
+          y: windowFrame.size.height - self.frame.origin.y - self.frame.height - 2,
+          width: self.frame.width + 4,
+          height: self.frame.height + 4
         )
-        if event.type == .leftMouseDragged {
-          if !self.dragged || frame.contains(windowLocation) {
-            self.dragged = false
-            return nil
-          }
-          return event
-        }
-        
-        if event.type == .leftMouseUp {
-          self.dragged = true
-        }
+//        if event.type == .leftMouseDragged {
+//          if !self.dragged || frame.contains(windowLocation) {
+//            self.dragged = false
+//            return nil
+//          }
+//          return event
+//        }
+//        
+//        if event.type == .leftMouseUp {
+//          self.dragged = true
+//        }
         
         self._callback(frame.contains(windowLocation) ? .mouseEntered : .mouseExited)
         return event
