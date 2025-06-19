@@ -243,8 +243,8 @@ class ImitateContent: NSView {
   init(_ callback: @escaping (_ type: NSEvent.EventType) -> Void) {
     _callback = callback
     super.init(frame: .zero)
-    wantsLayer = true
-    layer?.backgroundColor = NSColor.white.cgColor.copy(alpha: 0.01)
+//    wantsLayer = true
+//    layer?.backgroundColor = NSColor.red.cgColor // .copy(alpha: 0.01)
   }
   
   required init?(coder: NSCoder) {
@@ -265,7 +265,7 @@ class ImitateContent: NSView {
           x: screenLocation.x - windowFrame.origin.x,
           y: screenLocation.y - windowFrame.origin.y
         )
-        let frame = CGRect(x: self.superview!.frame.origin.x, y: windowFrame.size.height - self.frame.origin.y - self.frame.height, width: self.frame.width, height: self.frame.height)
+        let frame = CGRect(x: self.superview!.frame.origin.x - 3, y: windowFrame.size.height - self.frame.origin.y - self.frame.height - 2, width: self.frame.width + 6, height: self.frame.height + 4)
         if event.type == .leftMouseDragged {
           if !self.dragged || frame.contains(windowLocation) {
             self.dragged = false

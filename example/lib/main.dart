@@ -282,24 +282,28 @@ class _MyAppState extends State<MyApp>
             },
           ),
         ),
-        body: InAppWebView(
-          // initialSettings: InAppWebViewSettings(
-          //   // accessibilityIgnoresInvertColors:
-          //   javaScriptCanOpenWindowsAutomatically: true,
-          // ),
-          // onProgressChanged: (controller, progress) {
-          //   print("~~~~~~~~");
-          // },
-          // onLoadStart: (controller, url) {
-          //   print("onloadstart");
-          // },
-          // onLoadStop: (controller, url) {
-          //   print("onload stop");
-          // },
-          // onReceivedError: (controller, request, error) {
-          //   print("error");
-          // },
-          initialUrlRequest: URLRequest(url: WebUri("https://www.google.com")),
+        body: Center(
+          child: InAppWebView(
+            // initialSettings: InAppWebViewSettings(
+            //   // accessibilityIgnoresInvertColors:
+            //   javaScriptCanOpenWindowsAutomatically: true,
+            // ),
+            // onProgressChanged: (controller, progress) {
+            //   print("~~~~~~~~");
+            // },
+            // onLoadStart: (controller, url) {
+            //   print("onloadstart");
+            // },
+            // onLoadStop: (controller, url) {
+            //   print("onload stop");
+            // },
+            // onReceivedError: (controller, request, error) {
+            //   print("error");
+            // },
+            initialUrlRequest: URLRequest(
+              url: WebUri("https://www.google.com"),
+            ),
+          ),
         ),
       ),
     );
