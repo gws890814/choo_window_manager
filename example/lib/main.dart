@@ -237,6 +237,7 @@ class _MyAppState extends State<MyApp>
                         style: TextStyle(fontSize: 13, color: Colors.white),
                       ),
                       onTap: () async {
+                        ChooWindowManager.createWindow({});
                         print('click');
                       },
                     ),
