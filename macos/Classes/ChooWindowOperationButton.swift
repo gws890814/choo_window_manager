@@ -243,8 +243,8 @@ class ImitateContent: NSView {
   init(_ callback: @escaping (_ type: NSEvent.EventType) -> Void) {
     _callback = callback
     super.init(frame: .zero)
-//    wantsLayer = true
-//    layer?.backgroundColor = NSColor.red.cgColor // .copy(alpha: 0.01)
+    wantsLayer = true
+    layer?.backgroundColor = NSColor.red.cgColor.copy(alpha: 0.01)
   }
   
   required init?(coder: NSCoder) {
@@ -265,7 +265,12 @@ class ImitateContent: NSView {
           x: screenLocation.x - windowFrame.origin.x,
           y: screenLocation.y - windowFrame.origin.y
         )
-        let frame = CGRect(x: self.superview!.frame.origin.x - 3, y: windowFrame.size.height - self.frame.origin.y - self.frame.height - 2, width: self.frame.width + 6, height: self.frame.height + 4)
+        let frame = CGRect(
+          x: self.superview!.frame.origin.x, // - 2,
+          y: windowFrame.size.height - self.frame.origin.y - self.frame.height, // - 2,
+          width: self.frame.width, // + 4,
+          height: self.frame.height, // + 4
+        )
         if event.type == .leftMouseDragged {
           if !self.dragged || frame.contains(windowLocation) {
             self.dragged = false
@@ -681,7 +686,7 @@ class ChooWindowOperationButtonManager: NSView {
     contentView = ImitateContent() { type in
       var alphaValue: CGFloat = 0
       window.isMovable = false
-      if (type == .mouseEntered && NSEvent.pressedMouseButtons & (1 << 0) == 0) {
+      if (type == .mouseEntered) {
         alphaValue = 0.5
         window.isMovable = true
       }
