@@ -238,7 +238,6 @@ class ImitateContent: NSView {
   
   private var _callback: (_ type: NSEvent.EventType) -> Void
   private var mouseEvent: Any?
-//  private var dragged: Bool = true
   
   init(_ callback: @escaping (_ type: NSEvent.EventType) -> Void) {
     _callback = callback
@@ -271,17 +270,6 @@ class ImitateContent: NSView {
           width: self.frame.width + 8,
           height: self.frame.height + 8
         )
-//        if event.type == .leftMouseDragged {
-//          if !self.dragged || frame.contains(windowLocation) {
-//            self.dragged = false
-//            return nil
-//          }
-//          return event
-//        }
-//        
-//        if event.type == .leftMouseUp {
-//          self.dragged = true
-//        }
         
         self._callback(frame.contains(windowLocation) ? .mouseEntered : .mouseExited)
         return event
