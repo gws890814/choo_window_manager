@@ -1,6 +1,6 @@
 # Choo Window Manager
 
-一个用于 Flutter 应用的窗口管理器插件，提供对 macOS 窗口行为的精细控制，包括窗口的尺寸、位置、事件监听以及各种窗口样式设置。
+一个用于 Flutter 应用的窗口管理器插件，提供对 macOS 窗口行为的精细控制，包括多窗口管理、窗口按钮精细管理、窗口的尺寸、位置、事件监听以及各种窗口样式设置。
 
 ## 安装
 
@@ -198,6 +198,24 @@ dependencies:
 - `static Future<int> createWindow(Map<String, dynamic>? args)`
   - **描述**: 创建新窗口。
   - **参数**:
+
+### 窗口操作与管理
+
+- `static Future<bool> closeWindow(int windowId)`
+  - **描述**: 关闭指定窗口。
+  - **参数**:
+    - `windowId`: 要关闭的窗口 ID。
+  - **返回值**: `true` 如果关闭成功，否则 `false`。
+
+- `static Future<bool> closeWindows({List<int>? ids})`
+  - **描述**: 关闭一个或多个窗口。
+  - **参数**:
+    - `ids`: 要关闭的窗口 ID 列表，可选。如果为空或 `null`，则尝试关闭所有由该管理器创建的窗口。
+  - **返回值**: `true` 如果所有指定窗口都尝试关闭且至少有一个成功（或没有指定窗口时操作完成），否则 `false`。 (建议细化返回值，例如 `Map<int, bool>` 来表示每个窗口的关闭状态)
+
+- `static Future<void> destroy()`
+  - **描述**: 销毁所有由该管理器创建的窗口并释放相关资源。此操作通常比 `closeWindows` 更彻底，可能包括插件级别的清理。
+  - **注意**: 调用此方法后，插件管理的窗口将不复存在，可能需要重新初始化才能创建新窗口。
     - `args`: 新窗口参数，可选。
   - **返回值**: 新窗口的唯一标识符 `id`。
 
@@ -214,23 +232,7 @@ dependencies:
 **销毁所有窗口**：
 `ChooWindowManager.destroy()` 方法用于销毁所有由插件管理的窗口。这通常在应用程序退出时调用，以确保所有窗口资源都被正确释放。
 
-**窗口间通信**：
 
-
-- `static Future<bool> closeWindow(int windowId)`
-  - **描述**: 关闭指定窗口。
-  - **参数**:
-    - `windowId`: 要关闭的窗口 `id`。
-  - **返回值**: `true` 如果关闭成功，否则 `false`。
-
-- `static Future<bool> closeWindows({List<int>? ids})`
-  - **描述**: 关闭一个或多个窗口。
-  - **参数**:
-    - `ids`: 要关闭的窗口 `id` 列表，可选。如果为空，则关闭所有窗口。
-  - **返回值**: `true` 如果全部关闭成功，否则 `false`。
-
-- `static Future<void> destroy()`
-  - **描述**: 销毁所有窗口。
 
 #### 构造函数
 
