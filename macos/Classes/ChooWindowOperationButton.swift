@@ -266,10 +266,10 @@ class ImitateContent: NSView {
           y: screenLocation.y - windowFrame.origin.y
         )
         let frame = CGRect(
-          x: self.superview!.frame.origin.x - 2,
-          y: windowFrame.size.height - self.frame.origin.y - self.frame.height - 2,
-          width: self.frame.width + 4,
-          height: self.frame.height + 4
+          x: self.superview!.frame.origin.x - 5,
+          y: windowFrame.size.height - self.frame.origin.y - self.frame.height - 5,
+          width: self.frame.width + 10,
+          height: self.frame.height + 10
         )
 //        if event.type == .leftMouseDragged {
 //          if !self.dragged || frame.contains(windowLocation) {
