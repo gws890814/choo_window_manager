@@ -1369,7 +1369,7 @@ extension ChooWindowManager {
     keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) {
       [weak self] event in
       guard let self = self else { return event }
-
+      
       if !self.AllowKeyboard && self.keyboardEvent != event {
         var modifierFlags: [String] = []
         if event.modifierFlags.contains(.shift) {
@@ -1413,6 +1413,9 @@ extension ChooWindowManager {
               self.keyboardEvent = nil
               self.AllowKeyboard = true
               self.window.sendEvent(event)
+              DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                self.AllowKeyboard = false
+              }
             }
           }
         )
