@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+// import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -202,6 +203,8 @@ class _MyAppState extends State<MyApp>
 
   @override
   Widget build(BuildContext context) {
+    WebViewController webViewController = WebViewController();
+    webViewController.loadRequest(Uri.parse("https://www.google.com"));
     return MaterialApp(
       color: Colors.red,
       home: Scaffold(
@@ -254,11 +257,12 @@ class _MyAppState extends State<MyApp>
           ),
         ),
         body: Center(
-          child: InAppWebView(
-            initialUrlRequest: URLRequest(
-              url: WebUri("https://www.google.com"),
-            ),
-          ),
+          // child: InAppWebView(
+          //   initialUrlRequest: URLRequest(
+          //     url: WebUri("https://www.google.com"),
+          //   ),
+          // ),
+          child: WebViewWidget(controller: webViewController),
         ),
       ),
     );
