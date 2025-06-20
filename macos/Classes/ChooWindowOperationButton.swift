@@ -673,18 +673,25 @@ class ChooWindowOperationButtonManager: NSView {
     
     contentView = ImitateContent() { type in
       var alphaValue: CGFloat = 0
-      window.isMovable = false
+      var isMovable = false
+//      window.isMovable = false
       if (type == .mouseEntered) {
         alphaValue = 0.5
-        window.isMovable = true
+        isMovable = true
       }
+
       self.buttons.forEach { button in
         if !button.isEnabled { return }
         button.iconView?.alphaValue = alphaValue
         if !window.isKeyWindow && !window.isMainWindow {
           button.layer?.backgroundColor = type == .mouseEntered ? ImitateButton.buttonColorMap[button.buttonType] : ImitateButton.buttonDisableColor
         }
+        
         button.windowButton?.state = .off
+      }
+      
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        window.isMovable = isMovable
       }
     }
 
