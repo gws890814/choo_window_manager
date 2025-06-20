@@ -1,193 +1,507 @@
-import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:choo_window_manager/src/window_manager.dart';
+import 'package:choo_window_manager/choo_window_manager.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const MethodChannel channel = MethodChannel('choo_window_manager');
+  const MethodChannel windowChannel = MethodChannel('choo_window_manager_1');
+
+  setUp(() {
+    // Mock global channel
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          return {'result': true};
+        });
+
+    // Mock window-specific channel
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(windowChannel, (MethodCall methodCall) async {
+          switch (methodCall.method) {
+            case 'flutterReady':
+              return {'result': true};
+            case 'setSize':
+              return {'result': true};
+            case 'center':
+              return {'result': true};
+            case 'show':
+              return {'result': true};
+            case 'hide':
+              return {'result': true};
+            case 'close':
+              return {'result': true};
+            case 'focus':
+              return {'result': true};
+            case 'blur':
+              return {'result': true};
+            case 'minimize':
+              return {'result': true};
+            case 'maximize':
+              return {'result': true};
+            case 'restore':
+              return {'result': true};
+            case 'isVisible':
+              return true;
+            case 'isMaximized':
+              return false;
+            case 'isMinimized':
+              return false;
+            case 'getSize':
+              return {'width': 800.0, 'height': 600.0};
+            case 'getPosition':
+              return {'x': 100.0, 'y': 100.0};
+            case 'getTitle':
+              return 'Test Window';
+            case 'getOpacity':
+              return 1.0;
+            case 'addListener':
+              return {'result': true};
+            case 'removeListener':
+              return {'result': true};
+            case 'addPanListener':
+              return {'x': 0.0, 'y': 0.0};
+            case 'removePanListener':
+              return {'result': true};
+            case 'addPrePanListener':
+              return {'result': true};
+            case 'removePrePanListener':
+              return {'result': true};
+            case 'addHoverListener':
+              return {'result': true};
+            case 'removeHoverListener':
+              return {'result': true};
+            default:
+              return {'result': true};
+          }
+        });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(windowChannel, null);
+  });
+
   group('ChooWindowManager', () {
-    const MethodChannel globalChannel = MethodChannel('choo_window_manager');
-    late MethodChannel windowChannel;
-
-    setUp(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(globalChannel, (
-            MethodCall methodCall,
-          ) async {
-            switch (methodCall.method) {
-              case 'createWindow':
-                return {'id': 1};
-              default:
-                return null;
-            }
-          });
-    });
-
-    tearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(globalChannel, null);
-      if (ChooWindowManager.current != null) {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(windowChannel, null);
-      }
-    });
-
-    test('ChooWindowManager.ready initializes correctly', () async {
-      final options = ChooWindowOptions(1, title: 'Test Window');
-      ChooWindowManager? initializedWindow;
+    test('constructor initializes correctly', () async {
+      final options = ChooWindowOptions(1, size: const Size(800, 600));
+      final completer = Completer<void>();
 
       ChooWindowManager.ready(options, (window) {
-        initializedWindow = window;
+        try {
+          expect(window.id, equals(1));
+          expect(window.args, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
       });
 
-      // Simulate the async initialization completing
-      await Future.delayed(Duration.zero);
+      await completer.future;
+    });
 
-      expect(initializedWindow, isNotNull);
-      expect(initializedWindow!.id, 1);
-      expect(ChooWindowManager.current, initializedWindow);
-
-      windowChannel = MethodChannel('choo_window_manager_1');
+    test('show calls method channel', () async {
+      final List<MethodCall> log = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(windowChannel, (
             MethodCall methodCall,
           ) async {
-            return null;
+            log.add(methodCall);
+            return {'result': true};
           });
+
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          await window.show();
+
+          expect(log.any((call) => call.method == 'show'), isTrue);
+          final showCall = log.firstWhere((call) => call.method == 'show');
+          expect(showCall.arguments, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
     });
 
-    test('ChooWindowManager.current is set after ready', () async {
-      final options = ChooWindowOptions(2, title: 'Another Window');
-      ChooWindowManager.ready(options, (window) {});
-      await Future.delayed(Duration.zero);
-      expect(ChooWindowManager.current.id, 2);
-    });
-  });
-}
-  group('WindowManagerEvent', () {
-    late MethodChannel mockWindowChannel;
-
-    setUp(() {
-      mockWindowChannel = MethodChannel('choo_window_manager_mock');
+    test('hide calls method channel', () async {
+      final List<MethodCall> log = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(mockWindowChannel, (
+          .setMockMethodCallHandler(windowChannel, (
             MethodCall methodCall,
           ) async {
-            return null;
+            log.add(methodCall);
+            return {'result': true};
           });
-      // Mock ChooWindowManager.current for static methods
-      ChooWindowManager.current = ChooWindowManager.mock(mockWindowChannel, 0);
+
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          await window.hide();
+
+          expect(log.any((call) => call.method == 'hide'), isTrue);
+          final hideCall = log.firstWhere((call) => call.method == 'hide');
+          expect(hideCall.arguments, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
+    });
+
+    test('getSize returns correct size', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method == 'getSize') {
+              return {'width': 1024.0, 'height': 768.0};
+            }
+            return {'result': true};
+          });
+
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          final size = await window.getSize();
+
+          expect(size.width, equals(1024.0));
+          expect(size.height, equals(768.0));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
+    });
+
+    test('setSize calls method channel with correct arguments', () async {
+      final List<MethodCall> log = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            log.add(methodCall);
+            return {'result': true};
+          });
+
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          await window.setSize(const Size(1200, 800), animate: true);
+
+          expect(log.any((call) => call.method == 'setSize'), isTrue);
+          final setSizeCall = log.firstWhere(
+            (call) => call.method == 'setSize',
+          );
+          expect(setSizeCall.arguments['width'], equals(1200.0));
+          expect(setSizeCall.arguments['height'], equals(800.0));
+          expect(setSizeCall.arguments['animate'], equals(true));
+          expect(setSizeCall.arguments['id'], equals(1));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
+    });
+
+    test('isVisible returns correct value', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method == 'isVisible') {
+              return true;
+            }
+            return {'result': true};
+          });
+
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          final isVisible = await window.isVisible();
+          expect(isVisible, isTrue);
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
+    });
+  });
+
+  group('WindowManagerEvent', () {
+    late _MockWindowManagerEvent mockEvent;
+
+    setUp(() {
+      mockEvent = _MockWindowManagerEvent();
     });
 
     tearDown(() {
+      // Clean up any listeners
+      WindowManagerEvent.removeListener(mockEvent);
+      WindowManagerEvent.removePanListener(mockEvent);
+      WindowManagerEvent.removePrePanListener(mockEvent);
+      WindowManagerEvent.removeHoverListener(mockEvent);
+    });
+
+    test('addListener calls method channel', () async {
+      final List<MethodCall> log = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(mockWindowChannel, null);
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            log.add(methodCall);
+            return {'result': true};
+          });
+
+      // Initialize window manager first
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
+
+      ChooWindowManager.ready(options, (window) {
+        try {
+          WindowManagerEvent.addListener(mockEvent);
+
+          expect(log.any((call) => call.method == 'addListener'), isTrue);
+          final addListenerCall = log.firstWhere(
+            (call) => call.method == 'addListener',
+          );
+          expect(addListenerCall.arguments, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
     });
 
-    test('addListener and removeListener work correctly', () async {
-      final listener1 = MockWindowManagerEvent();
-      final listener2 = MockWindowManagerEvent();
+    test('removeListener calls method channel', () async {
+      final List<MethodCall> log = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            log.add(methodCall);
+            return {'result': true};
+          });
 
-      WindowManagerEvent.addListener(listener1);
-      expect(WindowManagerEvent.eventList.length, 1);
-      expect(WindowManagerEvent.eventList.contains(listener1), isTrue);
+      // Initialize window manager first
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
 
-      WindowManagerEvent.addListener(listener2);
-      expect(WindowManagerEvent.eventList.length, 2);
-      expect(WindowManagerEvent.eventList.contains(listener2), isTrue);
+      ChooWindowManager.ready(options, (window) {
+        try {
+          WindowManagerEvent.addListener(mockEvent);
+          log.clear(); // Clear the addListener call
 
-      WindowManagerEvent.removeListener(listener1);
-      expect(WindowManagerEvent.eventList.length, 1);
-      expect(WindowManagerEvent.eventList.contains(listener1), isFalse);
+          WindowManagerEvent.removeListener(mockEvent);
 
-      WindowManagerEvent.removeListener(listener2);
-      expect(WindowManagerEvent.eventList.isEmpty, isTrue);
+          expect(log.any((call) => call.method == 'removeListener'), isTrue);
+          final removeListenerCall = log.firstWhere(
+            (call) => call.method == 'removeListener',
+          );
+          expect(removeListenerCall.arguments, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
     });
 
-    test('addPanListener and removePanListener work correctly', () async {
-      final panListener = MockWindowManagerEvent();
+    test('addPanListener calls method channel', () async {
+      final List<MethodCall> log = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(windowChannel, (
+            MethodCall methodCall,
+          ) async {
+            log.add(methodCall);
+            if (methodCall.method == 'addPanListener') {
+              return {'x': 10.0, 'y': 20.0};
+            }
+            return {'result': true};
+          });
 
-      WindowManagerEvent.addPanListener(panListener);
-      expect(WindowManagerEvent.instance, panListener);
+      // Initialize window manager first
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
 
-      WindowManagerEvent.removePanListener(panListener);
-      expect(WindowManagerEvent.instance, isNull);
+      ChooWindowManager.ready(options, (window) {
+        try {
+          WindowManagerEvent.addPanListener(mockEvent);
+
+          expect(log.any((call) => call.method == 'addPanListener'), isTrue);
+          final addPanListenerCall = log.firstWhere(
+            (call) => call.method == 'addPanListener',
+          );
+          expect(addPanListenerCall.arguments, equals({'id': 1}));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
+
+      await completer.future;
     });
 
-    test('addPrePanListener and removePrePanListener work correctly', () async {
-      final prePanListener = MockWindowManagerEvent();
+    test('event callbacks are triggered by platform messages', () async {
+      // Initialize window manager first
+      final options = ChooWindowOptions(1);
+      final completer = Completer<void>();
 
-      WindowManagerEvent.addPrePanListener(prePanListener);
-      expect(WindowManagerEvent.hoverEventList.length, 1);
-      expect(
-        WindowManagerEvent.hoverEventList.contains(prePanListener),
-        isTrue,
-      );
+      ChooWindowManager.ready(options, (window) async {
+        try {
+          WindowManagerEvent.addListener(mockEvent);
 
-      WindowManagerEvent.removePrePanListener(prePanListener);
-      expect(WindowManagerEvent.hoverEventList.isEmpty, isTrue);
-    });
+          // Simulate onResize event from platform
+          final codec = const StandardMethodCodec();
+          final resizeData = codec.encodeMethodCall(
+            MethodCall('resize', {'id': 1, 'width': 1024.0, 'height': 768.0}),
+          );
+          await TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .handlePlatformMessage(
+                'choo_window_manager_1',
+                resizeData,
+                (data) {},
+              );
 
-    test('addHoverListener and removeHoverListener work correctly', () async {
-      final hoverListener = MockWindowManagerEvent();
+          expect(mockEvent.resizedSize, equals(const Size(1024.0, 768.0)));
 
-      WindowManagerEvent.addHoverListener(hoverListener);
-      expect(WindowManagerEvent.hoverEventList.length, 1);
-      expect(WindowManagerEvent.hoverEventList.contains(hoverListener), isTrue);
+          // Simulate onFocus event
+          final focusData = codec.encodeMethodCall(
+            MethodCall('focus', {'id': 1}),
+          );
+          await TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .handlePlatformMessage(
+                'choo_window_manager_1',
+                focusData,
+                (data) {},
+              );
 
-      WindowManagerEvent.removeHoverListener(hoverListener);
-      expect(WindowManagerEvent.hoverEventList.isEmpty, isTrue);
-    });
+          expect(mockEvent.focused, isTrue);
 
-    test('onWillClose returns true by default', () async {
-      final listener = MockWindowManagerEvent();
-      expect(await listener.onWillClose(), isTrue);
-    });
+          // Simulate onMove event
+          final moveData = codec.encodeMethodCall(
+            MethodCall('move', {
+              'id': 1,
+              'globalX': 100.0,
+              'globalY': 200.0,
+              'x': 50.0,
+              'y': 75.0,
+            }),
+          );
+          await TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .handlePlatformMessage(
+                'choo_window_manager_1',
+                moveData,
+                (data) {},
+              );
 
-    test('onKeyboard returns true by default', () async {
-      final listener = MockWindowManagerEvent();
-      expect(
-        await listener.onKeyboard(
-          KeyboardEvent(
-            type: 'keyDown',
-            characters: 'a',
-            keyCode: 0,
-            modifierFlags: [],
-          ),
-        ),
-        isTrue,
-      );
-    });
+          expect(mockEvent.movedOffset?.globalDx, equals(100.0));
+          expect(mockEvent.movedOffset?.globalDy, equals(200.0));
+          expect(mockEvent.movedOffset?.dx, equals(50.0));
+          expect(mockEvent.movedOffset?.dy, equals(75.0));
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
+      });
 
-    test('onEvent returns delivery by default', () async {
-      final listener = MockWindowManagerEvent();
-      expect(
-        await listener.onEvent(0, 'testMethod', delivery: 'testDelivery'),
-        'testDelivery',
-      );
+      await completer.future;
     });
   });
 }
 
-class MockWindowManagerEvent with WindowManagerEvent {}
+class _MockWindowManagerEvent with WindowManagerEvent {
+  Size? resizedSize;
+  GlobalOffset? movedOffset;
+  Offset? panOffset;
+  Offset? hoverOffset;
+  bool shown = false;
+  bool hidden = false;
+  bool focused = false;
+  bool blurred = false;
+  bool minimized = false;
+  bool maximized = false;
 
-// Add a mock constructor to ChooWindowManager for testing static methods
-extension ChooWindowManagerMock on ChooWindowManager {
-  static ChooWindowManager mock(MethodChannel channel, int id) {
-    final instance = ChooWindowManager.ready(
-      ChooWindowOptions(id: id, title: 'Mock Window'),
-      (window) {},
-    );
-    instance._windowChannel = channel; // Directly assign the mock channel
-    return instance;
+  @override
+  void onResize(Size size) {
+    resizedSize = size;
+  }
+
+  @override
+  void onMove(GlobalOffset offset) {
+    movedOffset = offset;
+  }
+
+  @override
+  void onPan(Offset offset) {
+    panOffset = offset;
+  }
+
+  @override
+  void onHover(Offset offset) {
+    hoverOffset = offset;
+  }
+
+  @override
+  void onShow() {
+    shown = true;
+  }
+
+  @override
+  void onHide() {
+    hidden = true;
+  }
+
+  @override
+  void onFocus() {
+    focused = true;
+  }
+
+  @override
+  void onBlur() {
+    blurred = true;
+  }
+
+  @override
+  void onMinimize() {
+    minimized = true;
+  }
+
+  @override
+  void onMaximize() {
+    maximized = true;
   }
 }
-
-// Helper to expose private static lists for testing
-extension WindowManagerEventTest on WindowManagerEvent {
-  static List<WindowManagerEvent> get eventList =>
-      WindowManagerEvent._eventList;
-  static List<WindowManagerEvent> get hoverEventList =>
-      WindowManagerEvent._hoverEventList;
-  static WindowManagerEvent? get instance => WindowManagerEvent._instance;
