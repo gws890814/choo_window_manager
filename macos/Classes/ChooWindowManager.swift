@@ -1073,7 +1073,7 @@ extension ChooWindowManager {
   /// - 当为nil时，表示没有正在处理的键盘事件
   ///
   /// 主要用于防止键盘事件的重复处理和管理事件的生命周期
-  var AllowKeyboard: Bool {
+  var AllowKeyboard: Any? {
     get {
       return objc_getAssociatedObject(self, &AssociatedKeys.AllowKeyboard) as? Bool ?? false
     }
@@ -1365,12 +1365,12 @@ extension ChooWindowManager {
     if keyboardEventMonitor != nil {
       removeKeyboardEvent()
     }
-
+    
     keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) {
       [weak self] event in
       guard let self = self else { return event }
       
-      if !self.AllowKeyboard && self.keyboardEvent != event {
+      if self.AllowKeyboard == nil {
         var modifierFlags: [String] = []
         if event.modifierFlags.contains(.shift) {
           modifierFlags.append("shift")
@@ -1399,7 +1399,7 @@ extension ChooWindowManager {
         if event.modifierFlags.contains(.deviceIndependentFlagsMask) {
           modifierFlags.append("deviceIndependentFlagsMask")
         }
-
+        
         emitEvent(
           "keyboard",
           args: [
@@ -1410,31 +1410,24 @@ extension ChooWindowManager {
           ],
           callback: { id, args in
             if args as? Bool ?? true {
-              self.keyboardEvent = nil
-              self.AllowKeyboard = true
-              self.window.sendEvent(event)
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                self.AllowKeyboard = false
-              }
+              self.AllowKeyboard = event
+              NSApp.sendEvent(event)
             }
           }
         )
         return nil
       }
-
-      self.AllowKeyboard = false
-
+      
+      self.AllowKeyboard = nil
+      
       if event.modifierFlags.contains(.command) && event.keyCode == 13 {
         self.close()
         return nil
       }
-
-      if keyboardEvent == nil {
-        keyboardEvent = event
-        return event
-      }
-
-      return keyboardEvent == event ? nil : event
+      
+      print("Infinite loop here")
+      
+      return event
     }
   }
 
