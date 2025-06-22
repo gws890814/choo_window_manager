@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:choo_window_manager_example/bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -13,7 +14,8 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
-        regionPosition: WindowButtonRegionPosition(y: 0, x: 10),
+        height: 56,
+        regionPosition: WindowButtonRegionPosition(y: 0, x: 16),
         // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
         // buttonSize: Size(   12, 12),
         // spacing: 50,
@@ -127,9 +129,10 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 }
 
 class _MyAppState extends State<MyApp>
-    with WindowManagerEvent, WidgetsBindingObserver {
+    with WindowManagerEvent, InAppWebviewBridge, WidgetsBindingObserver {
   bool init = false;
   String title = '';
+  int webProgress = 100;
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
   void initState() {
@@ -207,56 +210,59 @@ class _MyAppState extends State<MyApp>
       home: Scaffold(
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
-        appBar: ChooAppBar(
-          // height: 40,
-          child: Builder(
-            builder: (context) {
-              return Container(
-                height: double.infinity,
-                // color: Color.fromRGBO(
-                //   58,
-                //   62,
-                //   64,
-                //   1,
-                // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color.fromRGBO(61, 61, 61, 1),
-                      Color.fromRGBO(61, 61, 61, 1),
-                    ], // 渐变颜色
-                  ),
-                ),
-                child: Center(
-                  child: MouseRegion(
-                    child: GestureDetector(
-                      child: Text(
-                        title,
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                      onTap: () async {
-                        ChooWindowManager.createWindow({});
-                        print('click');
-                      },
-                    ),
-                    // onEnter: (event) {
-                    //   ChooAppBar.of(context)?.spread = false;
-                    // },
-                    // onExit: (event) {
-                    //   ChooAppBar.of(context)?.spread = true;
-                    // },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        // appBar: ChooAppBar(
+        //   // height: 40,
+        //   child: Builder(
+        //     builder: (context) {
+        //       return Container(
+        //         height: double.infinity,
+        //         // color: Color.fromRGBO(
+        //         //   58,
+        //         //   62,
+        //         //   64,
+        //         //   1,
+        //         // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
+        //         decoration: BoxDecoration(
+        //           gradient: LinearGradient(
+        //             begin: Alignment.topCenter,
+        //             end: Alignment.bottomCenter,
+        //             colors: [
+        //               Color.fromRGBO(61, 61, 61, 1),
+        //               Color.fromRGBO(61, 61, 61, 1),
+        //             ], // 渐变颜色
+        //           ),
+        //         ),
+        //         child: Center(
+        //           child: MouseRegion(
+        //             child: GestureDetector(
+        //               child: Text(
+        //                 title,
+        //                 style: TextStyle(fontSize: 13, color: Colors.white),
+        //               ),
+        //               onTap: () async {
+        //                 ChooWindowManager.createWindow({});
+        //                 print('click');
+        //               },
+        //             ),
+        //             // onEnter: (event) {
+        //             //   ChooAppBar.of(context)?.spread = false;
+        //             // },
+        //             // onExit: (event) {
+        //             //   ChooAppBar.of(context)?.spread = true;
+        //             // },
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   ),
+        // ),
         body: Center(
           child: InAppWebView(
+            onWebViewCreated: (controller) {
+              webviewController = controller;
+            },
             initialUrlRequest: URLRequest(
-              url: WebUri("https://www.google.com"),
+              url: WebUri("http://localhost:5173/"),
             ),
           ),
         ),
