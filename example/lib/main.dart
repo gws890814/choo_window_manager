@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:choo_window_manager_example/bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -13,7 +14,8 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
-        regionPosition: WindowButtonRegionPosition(y: 0, x: 10),
+        height: 70,
+        regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
         // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
         // buttonSize: Size(   12, 12),
         // spacing: 50,
@@ -127,8 +129,7 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 }
 
 class _MyAppState extends State<MyApp>
-    with WindowManagerEvent, WidgetsBindingObserver {
-  bool init = false;
+    with WindowManagerEvent, WebviewBridge, WidgetsBindingObserver {
   String title = '';
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
@@ -142,63 +143,63 @@ class _MyAppState extends State<MyApp>
     });
   }
 
-  @override
-  void onFocus() {
-    super.onFocus();
-  }
+  // @override
+  // void onFocus() {
+  //   super.onFocus();
+  // }
 
-  @override
-  void onShow() {
-    // TODO: implement onShow
-    super.onShow();
-    // print('!!!!!!onshow');
-  }
+  // @override
+  // void onShow() {
+  //   // TODO: implement onShow
+  //   super.onShow();
+  //   // print('!!!!!!onshow');
+  // }
 
-  void onHide() {}
+  // void onHide() {}
 
-  @override
-  void onMove(GlobalOffset offset) {}
+  // @override
+  // void onMove(GlobalOffset offset) {}
 
-  @override
-  void changeTitle(String title) {
-    super.changeTitle(title);
-    setState(() {
-      this.title = title;
-    });
-  }
+  // @override
+  // void changeTitle(String title) {
+  //   super.changeTitle(title);
+  //   setState(() {
+  //     this.title = title;
+  //   });
+  // }
 
-  @override
-  Future<bool> onWillClose() async {
-    print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
-    return true;
-  }
+  // @override
+  // Future<bool> onWillClose() async {
+  //   print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
+  //   return true;
+  // }
 
-  @override
-  Future<bool> onKeyboard(event) async {
-    print("我收到了喔");
-    // TODO: implement onKeyboard
-    // if (event.modifierFlags.contains(ModifierFlags.command)) {
-    //   if ([0, 13].contains(event.keyCode)) {
-    //     return true;
-    //   } else if (12 == event.keyCode) {
-    //     ChooWindowManager.destroy();
-    //     return false;
-    //   }
-    // }
-    return true;
-  }
+  // @override
+  // Future<bool> onKeyboard(event) async {
+  //   print("我收到了喔");
+  //   // TODO: implement onKeyboard
+  //   // if (event.modifierFlags.contains(ModifierFlags.command)) {
+  //   //   if ([0, 13].contains(event.keyCode)) {
+  //   //     return true;
+  //   //   } else if (12 == event.keyCode) {
+  //   //     ChooWindowManager.destroy();
+  //   //     return false;
+  //   //   }
+  //   // }
+  //   return true;
+  // }
 
-  @override
-  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
-    await Future.delayed(Duration(seconds: 2));
-    return {"b": false};
-  }
+  // @override
+  // Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
+  //   await Future.delayed(Duration(seconds: 2));
+  //   return {"b": false};
+  // }
 
-  @override
-  void onPan(Offset offset) {
-    // TODO: implement onPan
-    super.onPan(offset);
-  }
+  // @override
+  // void onPan(Offset offset) {
+  //   // TODO: implement onPan
+  //   super.onPan(offset);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -207,56 +208,59 @@ class _MyAppState extends State<MyApp>
       home: Scaffold(
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
-        appBar: ChooAppBar(
-          // height: 40,
-          child: Builder(
-            builder: (context) {
-              return Container(
-                height: double.infinity,
-                // color: Color.fromRGBO(
-                //   58,
-                //   62,
-                //   64,
-                //   1,
-                // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color.fromRGBO(61, 61, 61, 1),
-                      Color.fromRGBO(61, 61, 61, 1),
-                    ], // 渐变颜色
-                  ),
-                ),
-                child: Center(
-                  child: MouseRegion(
-                    child: GestureDetector(
-                      child: Text(
-                        title,
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                      onTap: () async {
-                        ChooWindowManager.createWindow({});
-                        print('click');
-                      },
-                    ),
-                    // onEnter: (event) {
-                    //   ChooAppBar.of(context)?.spread = false;
-                    // },
-                    // onExit: (event) {
-                    //   ChooAppBar.of(context)?.spread = true;
-                    // },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        // appBar: ChooAppBar(
+        //   // height: 40,
+        //   child: Builder(
+        //     builder: (context) {
+        //       return Container(
+        //         height: double.infinity,
+        //         // color: Color.fromRGBO(
+        //         //   58,
+        //         //   62,
+        //         //   64,
+        //         //   1,
+        //         // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
+        //         decoration: BoxDecoration(
+        //           gradient: LinearGradient(
+        //             begin: Alignment.topCenter,
+        //             end: Alignment.bottomCenter,
+        //             colors: [
+        //               Color.fromRGBO(61, 61, 61, 1),
+        //               Color.fromRGBO(61, 61, 61, 1),
+        //             ], // 渐变颜色
+        //           ),
+        //         ),
+        //         child: Center(
+        //           child: MouseRegion(
+        //             child: GestureDetector(
+        //               child: Text(
+        //                 title,
+        //                 style: TextStyle(fontSize: 13, color: Colors.white),
+        //               ),
+        //               onTap: () async {
+        //                 ChooWindowManager.createWindow({});
+        //                 print('click');
+        //               },
+        //             ),
+        //             // onEnter: (event) {
+        //             //   ChooAppBar.of(context)?.spread = false;
+        //             // },
+        //             // onExit: (event) {
+        //             //   ChooAppBar.of(context)?.spread = true;
+        //             // },
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   ),
+        // ),
         body: Center(
           child: InAppWebView(
+            onWebViewCreated: (controller) {
+              webviewController = controller;
+            },
             initialUrlRequest: URLRequest(
-              url: WebUri("https://www.google.com"),
+              url: WebUri("http://localhost:5173/"),
             ),
           ),
         ),

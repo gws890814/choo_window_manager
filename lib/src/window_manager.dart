@@ -286,8 +286,6 @@ class ChooWindowManager {
     _init(options, callback);
   }
 
-
-
   /// 处理原生端发来的MethodCall事件，根据事件类型分发到对应的回调或事件处理方法
   ///
   /// @param call 原生端发来的方法调用
@@ -331,6 +329,7 @@ class ChooWindowManager {
           "minimize": element.onMinimize,
           "maximize": element.onMaximize,
           "restore": element.onRestore,
+          "resize": element.onResize,
           "willEnterFullScreen": element.onWillEnterFullScreen,
           "didEnterFullScreen": element.onDidEnterFullScreen,
           "willLeaveFullScreen": element.onWillLeaveFullScreen,
@@ -547,6 +546,17 @@ extension ChooCurrentWindowManager on ChooWindowManager {
   /// 将窗口从最小化或最大化状态还原到正常状态。
   Future<void> restore() async {
     _windowChannel.invokeMethod<void>('restore', args);
+  }
+
+  Future<bool> isFullScreen() async {
+    return (await _windowChannel.invokeMethod<bool>('isFullScreen', args))!;
+  }
+
+  Future<void> setFullScreen({required bool isFullScreen}) async {
+    _windowChannel.invokeMethod<void>('setFullScreen', {
+      ...args,
+      "isFullScreen": isFullScreen,
+    });
   }
 
   /// 获取窗口尺寸。
