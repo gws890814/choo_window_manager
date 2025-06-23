@@ -14,8 +14,8 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
-        height: 56,
-        regionPosition: WindowButtonRegionPosition(y: 0, x: 16),
+        height: 60,
+        regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
         // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
         // buttonSize: Size(   12, 12),
         // spacing: 50,
@@ -101,36 +101,11 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
   }
 
   @override
-  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
-    return {"a": true};
-  }
-
-  @override
-  void onHover(Offset offset) {}
-
-  @override
-  Future<bool> onWillClose() async {
-    print("这里第一次触发了关闭窗口的回调， 嘿！让你关！${ChooWindowManager.current.id}");
-    return true;
-  }
-
-  @override
-  Future<bool> onKeyboard(event) async {
-    // TODO: implement onKeyboard
-    if (event.keyCode == 13 &&
-        event.modifierFlags.contains(ModifierFlags.command)) {
-      print('捕捉到了关闭，让他往下走::${ChooWindowManager.current.id}');
-    }
-    return true;
-  }
-
-  @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp>
-    with WindowManagerEvent, InAppWebviewBridge, WidgetsBindingObserver {
-  bool init = false;
+    with WindowManagerEvent, WebviewBridge, WidgetsBindingObserver {
   String title = '';
   int webProgress = 100;
   // final _chooWindowManagerPlugin = ChooWindowManager();
@@ -145,63 +120,63 @@ class _MyAppState extends State<MyApp>
     });
   }
 
-  @override
-  void onFocus() {
-    super.onFocus();
-  }
+  // @override
+  // void onFocus() {
+  //   super.onFocus();
+  // }
 
-  @override
-  void onShow() {
-    // TODO: implement onShow
-    super.onShow();
-    // print('!!!!!!onshow');
-  }
+  // @override
+  // void onShow() {
+  //   // TODO: implement onShow
+  //   super.onShow();
+  //   // print('!!!!!!onshow');
+  // }
 
-  void onHide() {}
+  // void onHide() {}
 
-  @override
-  void onMove(GlobalOffset offset) {}
+  // @override
+  // void onMove(GlobalOffset offset) {}
 
-  @override
-  void changeTitle(String title) {
-    super.changeTitle(title);
-    setState(() {
-      this.title = title;
-    });
-  }
+  // @override
+  // void changeTitle(String title) {
+  //   super.changeTitle(title);
+  //   setState(() {
+  //     this.title = title;
+  //   });
+  // }
 
-  @override
-  Future<bool> onWillClose() async {
-    print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
-    return true;
-  }
+  // @override
+  // Future<bool> onWillClose() async {
+  //   print("这里第二次触发了关闭窗口的回调， 嘿！阻止你关！${ChooWindowManager.current.id}");
+  //   return true;
+  // }
 
-  @override
-  Future<bool> onKeyboard(event) async {
-    print("我收到了喔");
-    // TODO: implement onKeyboard
-    // if (event.modifierFlags.contains(ModifierFlags.command)) {
-    //   if ([0, 13].contains(event.keyCode)) {
-    //     return true;
-    //   } else if (12 == event.keyCode) {
-    //     ChooWindowManager.destroy();
-    //     return false;
-    //   }
-    // }
-    return true;
-  }
+  // @override
+  // Future<bool> onKeyboard(event) async {
+  //   print("我收到了喔");
+  //   // TODO: implement onKeyboard
+  //   // if (event.modifierFlags.contains(ModifierFlags.command)) {
+  //   //   if ([0, 13].contains(event.keyCode)) {
+  //   //     return true;
+  //   //   } else if (12 == event.keyCode) {
+  //   //     ChooWindowManager.destroy();
+  //   //     return false;
+  //   //   }
+  //   // }
+  //   return true;
+  // }
 
-  @override
-  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
-    await Future.delayed(Duration(seconds: 2));
-    return {"b": false};
-  }
+  // @override
+  // Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
+  //   await Future.delayed(Duration(seconds: 2));
+  //   return {"b": false};
+  // }
 
-  @override
-  void onPan(Offset offset) {
-    // TODO: implement onPan
-    super.onPan(offset);
-  }
+  // @override
+  // void onPan(Offset offset) {
+  //   // TODO: implement onPan
+  //   super.onPan(offset);
+  // }
 
   @override
   Widget build(BuildContext context) {
