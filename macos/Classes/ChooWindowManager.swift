@@ -1503,7 +1503,7 @@ extension ChooWindowManager {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     customTitleBar?.height = height
   }
-
+  
   public func getWindowButtonSpacing() -> CGFloat {
     customTitleBar = customTitleBar ?? ChooWindowOperationButtonManager(window)
     return customTitleBar!.spacing
