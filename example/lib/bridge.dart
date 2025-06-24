@@ -516,4 +516,23 @@ abstract mixin class WebviewBridge {
   void changeTitle(String title) {
     _webviewqDispatchEvent("onWindowChangeTitle", detail: {"title": title});
   }
+
+  Future<bool> onWillClose() async {
+    return await _webviewqDispatchEvent("onWindowWillClose");
+  }
+
+  void onClose() {
+    _webviewqDispatchEvent("onClose");
+  }
+
+  Future<bool> onKeyboard(KeyboardEvent event) async {
+    List<String> flags =
+        event.modifierFlags
+            .map((value) => ModifierFlagsExtension.parse(value))
+            .toList();
+    return await _webviewqDispatchEvent(
+      "onKeyboard",
+      detail: {"keyCode": event.keyCode, "flags": flags},
+    );
+  }
 }

@@ -89,6 +89,31 @@ extension ModifierFlagsExtension on ModifierFlags {
         return ModifierFlags.deviceIndependentFlagsMask;
     }
   }
+
+  static String parse(ModifierFlags flag) {
+    switch (flag) {
+      case ModifierFlags.capsLock:
+        return 'capsLock';
+      case ModifierFlags.shift:
+        return 'shift';
+      case ModifierFlags.control:
+        return 'control';
+      case ModifierFlags.option:
+        return 'option';
+      case ModifierFlags.command:
+        return 'command';
+      case ModifierFlags.numericPad:
+        return 'numericPad';
+      case ModifierFlags.help:
+        return 'help';
+      case ModifierFlags.function:
+        return 'function';
+      case ModifierFlags.deviceIndependentFlagsMask:
+        return 'deviceIndependentFlagsMask';
+      default:
+        return 'deviceIndependentFlagsMask';
+    }
+  }
 }
 
 enum WindowButtonType { close, miniaturize, zoom }

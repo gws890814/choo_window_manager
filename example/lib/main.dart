@@ -14,7 +14,7 @@ void main(List<dynamic> args) async {
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
-        height: 70,
+        height: 60,
         regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
         // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
         // buttonSize: Size(   12, 12),
@@ -101,36 +101,13 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
   }
 
   @override
-  Future<dynamic> onEvent(int id, String method, {arguments, delivery}) async {
-    return {"a": true};
-  }
-
-  @override
-  void onHover(Offset offset) {}
-
-  @override
-  Future<bool> onWillClose() async {
-    print("这里第一次触发了关闭窗口的回调， 嘿！让你关！${ChooWindowManager.current.id}");
-    return true;
-  }
-
-  @override
-  Future<bool> onKeyboard(event) async {
-    // TODO: implement onKeyboard
-    if (event.keyCode == 13 &&
-        event.modifierFlags.contains(ModifierFlags.command)) {
-      print('捕捉到了关闭，让他往下走::${ChooWindowManager.current.id}');
-    }
-    return true;
-  }
-
-  @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp>
     with WindowManagerEvent, WebviewBridge, WidgetsBindingObserver {
   String title = '';
+  int webProgress = 100;
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
   void initState() {
