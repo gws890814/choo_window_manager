@@ -461,6 +461,32 @@ class ChooWindowManager {
   static Future<void> destroy() async {
     await _globalChannel.invokeMethod<void>("destroy");
   }
+
+  /// 获取所有窗口ID
+  ///
+  /// @return 所有窗口的ID列表。
+  static Future<List<int>> getWindowIds() async {
+    final result = await _globalChannel.invokeMethod<List<Object?>>('getWindowIds');
+    if (result == null) return [];
+    return result.cast<int>();
+  }
+
+  /// 向所有窗口广播事件
+  ///
+  /// @param method 事件方法名。
+  /// @param arguments 可选的事件参数。
+  /// @param self 是否向自身也发送事件，默认为 false。
+  static Future<void> broadcast(
+    String method, [
+    Map<String, dynamic>? arguments,
+    bool self = false,
+  ]) async {
+    final ids = await getWindowIds();
+    for (final id in ids) {
+      if (!self && id == current.id) continue;
+      await current.emit(id, method, arguments);
+    }
+  }
 }
 
 extension ChooCurrentWindowManager on ChooWindowManager {
@@ -953,5 +979,20 @@ extension ChooCurrentWindowManager on ChooWindowManager {
       result['method'] as String,
       result: result['arguments'] as T,
     );
+  }
+
+  /// 向多个窗口发送事件。
+  ///
+  /// @param ids 目标窗口ID列表。
+  /// @param method 事件方法名。
+  /// @param arguments 可选的事件参数。
+  Future<void> emits(
+    List<int> ids,
+    String method, [
+    Map<String, dynamic>? arguments,
+  ]) async {
+    for (final id in ids) {
+      await emit(id, method, arguments);
+    }
   }
 }

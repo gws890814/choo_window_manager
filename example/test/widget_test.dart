@@ -13,7 +13,7 @@ import 'package:choo_window_manager_example/main.dart';
 void main() {
   testWidgets('Verify Platform version', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp(windowId: 0));
+    await tester.pumpWidget(MyApp(windowId: 0, arguments: {},));
 
     // Verify that platform version is retrieved.
     expect(

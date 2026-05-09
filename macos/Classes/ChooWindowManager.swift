@@ -1133,11 +1133,18 @@ extension ChooWindowManager {
     callback: ((_ id: Int64, _ args: Any?) -> Void)? = nil
   ) {
     if !listener {
+      if let callback = callback {
+        callback(self.windowId, nil)
+      }
       return
     }
     windowChannel?.invokeMethod(eventName, arguments: args) { result in
       if let callback = callback {
-        callback(self.windowId, result)
+        if result is FlutterError {
+          callback(self.windowId, nil)
+        } else {
+          callback(self.windowId, result)
+        }
       }
     }
   }
@@ -1345,6 +1352,8 @@ extension ChooWindowManager {
     removeHoverListener(nil)
 
     emitEvent("close", args: nil)
+
+    ChooWindowManager.windowMap.removeValue(forKey: windowId)
   }
 
   /// 添加键盘事件监听器

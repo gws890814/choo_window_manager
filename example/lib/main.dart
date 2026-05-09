@@ -1,21 +1,21 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:choo_window_manager_example/bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:choo_window_manager/choo_window_manager.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main(List<dynamic> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   int windowId = int.parse(args[0]);
+  Map<String, dynamic> arguments = jsonDecode(args[1] ?? '{}') as Map<String, dynamic>;
   ChooWindowManager.ready(
     ChooWindowOptions(
       windowId,
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
       buttonOptions: WindowButtonOptions(
-        height: 60,
-        regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
+        // height: 40,
+        // regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
         // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
         // buttonSize: Size(   12, 12),
         // spacing: 50,
@@ -91,12 +91,13 @@ void main(List<dynamic> args) async {
   // });
   // ChooWindowManager
   // print(await ChooWindowManager().getPlatformVersion());
-  runApp(MyApp(windowId: windowId));
+  runApp(MyApp(windowId: windowId, arguments: arguments));
 }
 
 class MyApp extends StatefulWidget with WindowManagerEvent {
   final int windowId;
-  MyApp({required this.windowId, super.key}) {
+  final Map<String, dynamic> arguments;
+  MyApp({required this.windowId, required this.arguments, super.key}) {
     WindowManagerEvent.addListener(this);
   }
 
@@ -105,7 +106,7 @@ class MyApp extends StatefulWidget with WindowManagerEvent {
 }
 
 class _MyAppState extends State<MyApp>
-    with WindowManagerEvent, WebviewBridge, WidgetsBindingObserver {
+    with WindowManagerEvent, WidgetsBindingObserver {
   String title = '';
   int webProgress = 100;
   // final _chooWindowManagerPlugin = ChooWindowManager();
@@ -179,67 +180,81 @@ class _MyAppState extends State<MyApp>
   // }
 
   @override
+  Future onEvent(int id, String method, {arguments, required delivery}) async {
+    print('onEvent: $id, $method, $arguments, $delivery, thisWindowId: ${widget.windowId}');
+    // TODO: implement onEvent
+    return '嘿嘿';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       color: Colors.red,
       home: Scaffold(
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
-        // appBar: ChooAppBar(
-        //   // height: 40,
-        //   child: Builder(
-        //     builder: (context) {
-        //       return Container(
-        //         height: double.infinity,
-        //         // color: Color.fromRGBO(
-        //         //   58,
-        //         //   62,
-        //         //   64,
-        //         //   1,
-        //         // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
-        //         decoration: BoxDecoration(
-        //           gradient: LinearGradient(
-        //             begin: Alignment.topCenter,
-        //             end: Alignment.bottomCenter,
-        //             colors: [
-        //               Color.fromRGBO(61, 61, 61, 1),
-        //               Color.fromRGBO(61, 61, 61, 1),
-        //             ], // 渐变颜色
-        //           ),
-        //         ),
-        //         child: Center(
-        //           child: MouseRegion(
-        //             child: GestureDetector(
-        //               child: Text(
-        //                 title,
-        //                 style: TextStyle(fontSize: 13, color: Colors.white),
-        //               ),
-        //               onTap: () async {
-        //                 ChooWindowManager.createWindow({});
-        //                 print('click');
-        //               },
-        //             ),
-        //             // onEnter: (event) {
-        //             //   ChooAppBar.of(context)?.spread = false;
-        //             // },
-        //             // onExit: (event) {
-        //             //   ChooAppBar.of(context)?.spread = true;
-        //             // },
-        //           ),
-        //         ),
-        //       );
-        //     },
-        //   ),
-        // ),
-        body: Center(
-          child: InAppWebView(
-            onWebViewCreated: (controller) {
-              webviewController = controller;
+        appBar: ChooAppBar(
+          height: 40,
+          child: Builder(
+            builder: (context) {
+              return Container(
+                height: double.infinity,
+                // color: Color.fromRGBO(
+                //   58,
+                //   62,
+                //   64,
+                //   1,
+                // ), // Colors.red, // Color.fromRGBO(58, 62, 64, 1),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.fromRGBO(61, 61, 61, 1),
+                      Color.fromRGBO(61, 61, 61, 1),
+                    ], // 渐变颜色
+                  ),
+                ),
+                child: Center(
+                  child: MouseRegion(
+                    child: GestureDetector(
+                      child: Text(
+                        title,
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                      onTap: () async {
+                        ChooWindowManager.createWindow({});
+                        print('click');
+                      },
+                    ),
+                    // onEnter: (event) {
+                    //   ChooAppBar.of(context)?.spread = false;
+                    // },
+                    // onExit: (event) {
+                    //   ChooAppBar.of(context)?.spread = true;
+                    // },
+                  ),
+                ),
+              );
             },
-            initialUrlRequest: URLRequest(
-              url: WebUri("http://localhost:5173/"),
-            ),
           ),
+        ),
+        body: Center(
+          child: widget.windowId == 0 ? Container(child: Text('hello world'),) : GestureDetector(child: Text('emit'), onTap: () {
+            // ChooWindowManager.current.emit(0, 'test', {'a': 1}).then((onValue) {
+            //   print('onValue: ${onValue?.result}!!!');
+            // });
+            ChooWindowManager.broadcast('test', {'a': 2}, true);
+            print('emit');
+          },),
+          // child: InAppWebView(
+          //   onWebViewCreated: (controller) {
+          //     webviewController = controller;
+          //   },
+          //   initialUrlRequest: URLRequest(
+          //     url: WebUri("http://localhost:5173/"),
+          //   ),
+          // ),
         ),
       ),
     );

@@ -90,6 +90,9 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
     case "destroy":
       NSApp.terminate(nil)
       result(nil)
+    case "getWindowIds":
+      result(Array(ChooWindowManager.windowMap.keys))
+      break
     default:
       result(FlutterMethodNotImplemented)
     }
