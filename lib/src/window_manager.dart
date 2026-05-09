@@ -180,6 +180,9 @@ abstract mixin class WindowManagerEvent {
   /// @param offset 悬停时的全局坐标。
   void onHover(Offset offset) {}
 
+  /// 窗口初始化完成回调。
+  void onReady() {}
+
   /// 窗口显示回调。
   void onShow() {}
 
@@ -420,6 +423,10 @@ class ChooWindowManager {
     }
 
     await _windowChannel.invokeMethod<void>("windowReady", args);
+
+    for (var element in WindowManagerEvent._eventList) {
+      element.onReady();
+    }
 
     callback(this);
   }

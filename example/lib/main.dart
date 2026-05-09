@@ -13,15 +13,15 @@ void main(List<dynamic> args) async {
       windowId,
       title: "测试一下",
       titleBarStyle: WindowTitleVisibility.hidden,
-      buttonOptions: WindowButtonOptions(
-        // height: 40,
-        // regionPosition: WindowButtonRegionPosition(y: 0, x: 15),
-        // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
-        // buttonSize: Size(   12, 12),
-        // spacing: 50,
-        // height: 40,
-        // hiddenButtons: [WindowButtonType.close],
-      ),
+      // buttonOptions: WindowButtonOptions(
+      //   // height: 140,
+      //   // regionPosition: WindowButtonRegionPosition(y: 0, x: 115),
+      //   // enabledButtons: [WindowButtonType.close, WindowButtonType.zoom],
+      //   // buttonSize: Size(   12, 12),
+      //   // spacing: 50,
+      //   // height: 40,
+      //   // hiddenButtons: [WindowButtonType.close],
+      // ),
       // offset: Offset(0, 0),
       // size: Size(500, 300),
       animationBehavior: WindowAnimationBehavior.documentWindow,
@@ -30,7 +30,6 @@ void main(List<dynamic> args) async {
     (window) async {
       await window.show();
       await window.focus();
-
       // await Future.delayed(Duration(milliseconds: 3000), () {
       //   ChooWindowManager.current.setWindowButtonEnabled(
       //     types: [WindowButtonType.close],
@@ -91,6 +90,7 @@ void main(List<dynamic> args) async {
   // });
   // ChooWindowManager
   // print(await ChooWindowManager().getPlatformVersion());
+  // runApp(MyApp(windowId: windowId, arguments: arguments));
   runApp(MyApp(windowId: windowId, arguments: arguments));
 }
 
@@ -109,16 +109,30 @@ class _MyAppState extends State<MyApp>
     with WindowManagerEvent, WidgetsBindingObserver {
   String title = '';
   int webProgress = 100;
+
+  _MyAppState() {
+    ChooWindowManager.current.getTitle().then((value) {
+      print('title2 $value');
+    });
+  }
+
   // final _chooWindowManagerPlugin = ChooWindowManager();
   @override
   void initState() {
     super.initState();
     WindowManagerEvent.addListener(this);
+  }
+
+  @override
+  void onReady() {
+    // TODO: implement onShow
     ChooWindowManager.current.getTitle().then((value) {
       setState(() {
         title = value;
+        print(value);
       });
     });
+    super.onReady();
   }
 
   // @override
@@ -194,7 +208,7 @@ class _MyAppState extends State<MyApp>
         backgroundColor: Colors.red,
         // appBar: AppBar(title: const Text('Plugin example app')),
         appBar: ChooAppBar(
-          height: 40,
+          height: 140,
           child: Builder(
             builder: (context) {
               return Container(
