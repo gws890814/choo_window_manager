@@ -906,8 +906,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 2. 记录鼠标位置作为拖拽的起始点
   /// 3. 为后续的拖拽操作提供参考点
   public func addPrePanListener(_ id: String) {
-    addHoverListener(id) { point in
-      self.panStartPoint = point
+    addHoverListener(id) { [weak self] point in
+      self?.panStartPoint = point
     }
   }
 
@@ -934,7 +934,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   ///   - x: 窗口相对于当前屏幕的水平坐标
   ///   - y: 窗口相对于当前屏幕的垂直坐标
   public func addPanListener() -> [String: CGFloat] {
-    panEvent = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
+    panEvent = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] event in
+      guard let self = self else { return event }
       var windowLocation: CGPoint
       if self.panStartPoint == nil {
         let screenLocation = NSEvent.mouseLocation
@@ -1138,7 +1139,8 @@ extension ChooWindowManager {
       }
       return
     }
-    windowChannel?.invokeMethod(eventName, arguments: args) { result in
+    windowChannel?.invokeMethod(eventName, arguments: args) { [weak self] result in
+      guard let self = self else { return }
       if let callback = callback {
         if result is FlutterError {
           callback(self.windowId, nil)
@@ -1330,10 +1332,10 @@ extension ChooWindowManager {
     if allowClosing == nil {
       emitEvent(
         "willClose", args: nil,
-        callback: { id, arguments in
-          self.allowClosing = arguments as? Bool
-          if self.allowClosing != false {
-            self.close(true)
+        callback: { [weak self] id, arguments in
+          self?.allowClosing = arguments as? Bool
+          if self?.allowClosing != false {
+            self?.close(true)
           }
         })
       return false
@@ -1438,13 +1440,14 @@ extension ChooWindowManager {
             "characters": event.characters,
             "charactersIgnoringModifiers": event.charactersIgnoringModifiers,
           ],
-          callback: { id, args in
+          callback: { [weak self] id, args in
+            guard let self = self else { return }
             if args as? Bool ?? true {
               self.keyboardEvent = nil
               self.AllowKeyboard = true
               self.window.sendEvent(event)
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                self.AllowKeyboard = false
+              DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.AllowKeyboard = false
               }
             }
           }
