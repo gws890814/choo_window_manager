@@ -1324,12 +1324,17 @@ extension ChooWindowManager {
   /// 2. 回调中设置allowClosing标志并尝试关闭窗口
   /// 3. 再次调用时根据allowClosing标志决定是否允许关闭
   public func windowShouldClose(_ sender: NSWindow) -> Bool {
+    if !listener {
+      return true
+    }
     if allowClosing == nil {
       emitEvent(
         "willClose", args: nil,
         callback: { id, arguments in
           self.allowClosing = arguments as? Bool
-          self.close()
+          if self.allowClosing != false {
+            self.close(true)
+          }
         })
       return false
     } else {
@@ -1350,10 +1355,22 @@ extension ChooWindowManager {
   public func windowWillClose(_ notification: Notification) {
     removeKeyboardEvent()
     removeHoverListener(nil)
+    removePanListener()
+
+    if let chooBaseWindow = window as? ChooBaseWindow {
+      chooBaseWindow.cleanupTrackingArea()
+    }
 
     emitEvent("close", args: nil)
 
+    globalChannel?.setMethodCallHandler(nil)
+    windowChannel?.setMethodCallHandler(nil)
+    globalChannel = nil
+    windowChannel = nil
+
     ChooWindowManager.windowMap.removeValue(forKey: windowId)
+    
+    NSApp.activate(ignoringOtherApps: false)
   }
 
   /// 添加键盘事件监听器
@@ -1378,6 +1395,10 @@ extension ChooWindowManager {
     keyboardEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) {
       [weak self] event in
       guard let self = self else { return event }
+      
+      if !self.listener {
+        return event
+      }
       
       if !self.AllowKeyboard && self.keyboardEvent != event {
         var modifierFlags: [String] = []
@@ -1432,11 +1453,6 @@ extension ChooWindowManager {
       }
 
       self.AllowKeyboard = false
-
-      if event.modifierFlags.contains(.command) && event.keyCode == 13 {
-        self.close()
-        return nil
-      }
 
       if keyboardEvent == nil {
         keyboardEvent = event

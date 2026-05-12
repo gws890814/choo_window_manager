@@ -275,6 +275,22 @@ class ChooWindowManager {
   /// 获取当前窗口的参数（如id），便于方法调用时传参
   Map<String, dynamic> get args => {'id': id};
 
+  /// 静态方法：获取主屏幕尺寸（不需要 current 实例即可调用）
+  static Future<Size> getMainScreenSize() async {
+    Map<String, double> result =
+        (await _globalChannel.invokeMethod<Map<Object?, Object?>>(
+          'getMainScreenSize',
+        ))!.cast<String, double>();
+    return Size(result['width']!, result['height']!);
+  }
+
+  /// 静态方法：获取所有屏幕信息（不需要 current 实例即可调用）
+  static Future<List<ChooScreen>> getScreens() async {
+    final List<dynamic> result =
+        await _globalChannel.invokeMethod<List<dynamic>>('getScreens') ?? [];
+    return result.map((e) => ChooScreen.fromMap(e as Map)).toList();
+  }
+
   /// 构造函数：初始化窗口管理器并注册回调
   ///
   /// @param options 窗口初始化参数

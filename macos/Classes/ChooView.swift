@@ -35,16 +35,14 @@ open class ChooBaseWindow: NSWindow {
   }
 
   private func setupTrackingArea() {
-    // 移除旧的 trackingArea（如果存在）
     if let oldArea = trackingArea {
       contentView?.removeTrackingArea(oldArea)
     }
 
-    // 创建新的 trackingArea
     let options: NSTrackingArea.Options = [
       .mouseEnteredAndExited,
-      .activeAlways,  // 即使窗口非活跃也监听
-      .inVisibleRect,  // 只在可见区域跟踪
+      .activeAlways,
+      .inVisibleRect,
     ]
 
     trackingArea = NSTrackingArea(
@@ -57,7 +55,13 @@ open class ChooBaseWindow: NSWindow {
     contentView?.addTrackingArea(trackingArea!)
   }
 
-  // MARK: - 鼠标事件回调
+  public func cleanupTrackingArea() {
+    if let area = trackingArea {
+      contentView?.removeTrackingArea(area)
+      trackingArea = nil
+    }
+  }
+
   override open func mouseEntered(with event: NSEvent) {
     if styleMask.contains(.fullSizeContentView) && titlebarAppearsTransparent {
       isMovable = false
@@ -74,9 +78,6 @@ open class ChooBaseWindow: NSWindow {
 ///
 /// ChooWindow提供了与ChooWindowManager的集成，支持窗口标识和自定义行为。
 class ChooWindow: ChooBaseWindow {
-  /// 窗口的唯一标识符
-  ///
-  /// 通过窗口管理器获取的唯一ID，用于在多窗口环境中识别特定窗口。
   public var windowId: Int64? {
     return (delegate as? ChooWindowManager)?.windowId
   }
@@ -93,6 +94,7 @@ class ChooWindow: ChooBaseWindow {
     backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool
   ) {
     super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
+    isReleasedWhenClosed = false
     let chooWindowManager = ChooWindowManager(self)
     delegate = chooWindowManager
   }

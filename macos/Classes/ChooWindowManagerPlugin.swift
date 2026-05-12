@@ -41,27 +41,23 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
   
   /// Flutter插件注册器实例
   private let registrar: FlutterPluginRegistrar
-  
-  /// 当前窗口的ID
+
   private var windowId: Int64 {
     get {
       (registrar.view!.window!.contentViewController as! ChooFlutterViewController).windowId
     }
   }
-    
-  /// 初始化插件实例
-  ///
-  /// - Parameter registrar: Flutter插件注册器
+
   public init(_ registrar: FlutterPluginRegistrar) {
-    self.registrar = registrar;
+    self.registrar = registrar
     super.init()
-    
+
     if ChooWindowManager.windowMap[windowId] == nil {
       let window: NSWindow = NSApplication.shared.windows[0]
       let chooWindowManager = ChooWindowManager(window)
       window.delegate = chooWindowManager
     }
-    
+
     let wManager: ChooWindowManager = ChooWindowManager.windowMap[windowId]!
     
     wManager.globalChannel = FlutterMethodChannel(name: "choo_window_manager", binaryMessenger: registrar.messenger)
@@ -93,6 +89,56 @@ public class ChooWindowManagerPlugin: NSObject, FlutterPlugin {
     case "getWindowIds":
       result(Array(ChooWindowManager.windowMap.keys))
       break
+    case "getMainScreenSize":
+      if let screen = NSScreen.main {
+        let size = screen.visibleFrame.size
+        result(["width": size.width, "height": size.height])
+      } else {
+        result(["width": 0.0, "height": 0.0])
+      }
+    case "getScreens":
+      var screens: [[String: Any]] = []
+      let mainScreen = NSScreen.main
+      for screen in NSScreen.screens {
+        let frame = screen.frame
+        let visibleFrame = screen.visibleFrame
+        var screenData: [String: Any] = [
+          "name": screen.localizedName,
+          "isMain": screen === mainScreen,
+          "frame": [
+            "x": frame.origin.x,
+            "y": frame.origin.y,
+            "width": frame.size.width,
+            "height": frame.size.height,
+          ],
+          "visibleFrame": [
+            "x": visibleFrame.origin.x,
+            "y": visibleFrame.origin.y,
+            "width": visibleFrame.size.width,
+            "height": visibleFrame.size.height,
+          ],
+          "scaleFactor": screen.backingScaleFactor,
+          "colorSpace": screen.colorSpace?.localizedName ?? "",
+        ]
+        if #available(macOS 12.0, *) {
+          let safeArea = screen.safeAreaInsets
+          screenData["safeAreaInsets"] = [
+            "top": safeArea.top,
+            "left": safeArea.left,
+            "bottom": safeArea.bottom,
+            "right": safeArea.right,
+          ]
+        } else {
+          screenData["safeAreaInsets"] = [
+            "top": 0.0,
+            "left": 0.0,
+            "bottom": 0.0,
+            "right": 0.0,
+          ]
+        }
+        screens.append(screenData)
+      }
+      result(screens)
     default:
       result(FlutterMethodNotImplemented)
     }

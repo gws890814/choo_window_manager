@@ -5,10 +5,11 @@ class ChooAppBar extends AppBar {
   static _WindowPanState? of(BuildContext context) =>
       WindowPanWidget.of(context);
 
-  ChooAppBar({super.key, required Widget child, double height = 28})
+  ChooAppBar({super.key, required Widget child, double height = 28, Color? backgroundColor})
     : super(
         toolbarHeight: height,
-        title: GestureDetector(
+        backgroundColor: backgroundColor,
+               title: GestureDetector(
           onDoubleTap: () async {
             bool isMaximized = await ChooWindowManager.current.isMaximized();
             if (isMaximized) {

@@ -472,3 +472,89 @@ class WindowButtonRegionPosition {
 
   WindowButtonRegionPosition({this.x, required this.y});
 }
+
+class ChooScreenRect {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+
+  ChooScreenRect({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+
+  factory ChooScreenRect.fromMap(Map<dynamic, dynamic> map) {
+    return ChooScreenRect(
+      x: map['x'] as double,
+      y: map['y'] as double,
+      width: map['width'] as double,
+      height: map['height'] as double,
+    );
+  }
+
+  Size get size => Size(width, height);
+  Offset get offset => Offset(x, y);
+  Rect get rect => Rect.fromLTWH(x, y, width, height);
+}
+
+class ChooScreenInsets {
+  final double top;
+  final double left;
+  final double bottom;
+  final double right;
+
+  ChooScreenInsets({
+    required this.top,
+    required this.left,
+    required this.bottom,
+    required this.right,
+  });
+
+  factory ChooScreenInsets.fromMap(Map<dynamic, dynamic> map) {
+    return ChooScreenInsets(
+      top: map['top'] as double,
+      left: map['left'] as double,
+      bottom: map['bottom'] as double,
+      right: map['right'] as double,
+    );
+  }
+}
+
+class ChooScreen {
+  final String name;
+  final bool isMain;
+  final ChooScreenRect frame;
+  final ChooScreenRect visibleFrame;
+  final ChooScreenInsets safeAreaInsets;
+  final double scaleFactor;
+  final String colorSpace;
+
+  ChooScreen({
+    required this.name,
+    required this.isMain,
+    required this.frame,
+    required this.visibleFrame,
+    required this.safeAreaInsets,
+    required this.scaleFactor,
+    required this.colorSpace,
+  });
+
+  factory ChooScreen.fromMap(Map<dynamic, dynamic> map) {
+    return ChooScreen(
+      name: map['name'] as String? ?? '',
+      isMain: map['isMain'] as bool? ?? false,
+      frame: ChooScreenRect.fromMap(map['frame'] as Map),
+      visibleFrame: ChooScreenRect.fromMap(map['visibleFrame'] as Map),
+      safeAreaInsets: ChooScreenInsets.fromMap(map['safeAreaInsets'] as Map),
+      scaleFactor: map['scaleFactor'] as double? ?? 1.0,
+      colorSpace: map['colorSpace'] as String? ?? '',
+    );
+  }
+
+  Size get size => frame.size;
+  Size get visibleSize => visibleFrame.size;
+  bool get isRetina => scaleFactor >= 2.0;
+}
