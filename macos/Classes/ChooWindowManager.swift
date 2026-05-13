@@ -1393,7 +1393,6 @@ extension ChooWindowManager {
     window.contentViewController = nil
     window.contentView = nil
     
-    
     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
       let pid = ProcessInfo.processInfo.processIdentifier
       if let cgWindows = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID) as? [[String: Any]] {
