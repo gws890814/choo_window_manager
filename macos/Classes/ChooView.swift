@@ -94,9 +94,9 @@ class ChooWindow: ChooBaseWindow {
     backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool
   ) {
     super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
-    isReleasedWhenClosed = false
     let chooWindowManager = ChooWindowManager(self)
     delegate = chooWindowManager
+    isReleasedWhenClosed = false
   }
 
   /// 重写窗口排序方法

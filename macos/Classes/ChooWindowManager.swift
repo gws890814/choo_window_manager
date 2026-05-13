@@ -113,7 +113,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   /// 窗口显示过程在主线程异步执行，以确保UI操作的线程安全
   public func show() {
     window.setIsVisible(true)
-    DispatchQueue.main.async {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
       NSApp.activate(ignoringOtherApps: true)
       self.window.makeKeyAndOrderFront(nil)
       self.emitEvent("show", args: nil)
@@ -128,7 +129,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
   ///
   /// 窗口隐藏过程在主线程异步执行，以确保UI操作的线程安全
   public func hide() {
-    DispatchQueue.main.async {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
       self.window.orderOut(nil)
       self.emitEvent("hide", args: nil)
     }
@@ -798,12 +800,8 @@ open class ChooWindowManager: NSObject, NSWindowDelegate {
 
     moveEvent = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
       guard let self = self else { return event }
-
-      if self.processMouseEvent(callback) {
-        return event
-      } else {
-        return event
-      }
+      _ = self.processMouseEvent(callback)
+      return event
     }
   }
 
@@ -1327,7 +1325,8 @@ extension ChooWindowManager {
   /// 3. 再次调用时根据allowClosing标志决定是否允许关闭
   public func windowShouldClose(_ sender: NSWindow) -> Bool {
     if !listener {
-      return true
+      close(true)
+      return false
     }
     if allowClosing == nil {
       emitEvent(
@@ -1363,16 +1362,51 @@ extension ChooWindowManager {
       chooBaseWindow.cleanupTrackingArea()
     }
 
-    emitEvent("close", args: nil)
-
-    globalChannel?.setMethodCallHandler(nil)
-    windowChannel?.setMethodCallHandler(nil)
-    globalChannel = nil
-    windowChannel = nil
-
     ChooWindowManager.windowMap.removeValue(forKey: windowId)
     
-    NSApp.activate(ignoringOtherApps: false)
+    globalChannel?.setMethodCallHandler(nil)
+    windowChannel?.setMethodCallHandler(nil)
+    
+    globalChannel = nil
+    windowChannel = nil
+    
+    window.delegate = nil
+    NotificationCenter.default.removeObserver(window)
+            
+    // 方式二：移除所有观察者（全局，谨慎使用）
+    // NotificationCenter.default.removeObserver(self)
+    
+    // 3. 取消所有 performSelector 调用
+    NSObject.cancelPreviousPerformRequests(withTarget: window)
+    
+    // 4. 停止所有动画
+    window.animator().alphaValue = 0
+    
+    // 5. 移除所有子视图
+    window.contentView?.subviews.forEach { $0.removeFromSuperview() }
+    
+    
+    if let flutterVC = window.contentViewController as? ChooFlutterViewController {
+      flutterVC.engine.shutDownEngine()
+    }
+    
+    window.contentViewController = nil
+    window.contentView = nil
+    
+    
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+      let pid = ProcessInfo.processInfo.processIdentifier
+      if let cgWindows = CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID) as? [[String: Any]] {
+        let ourWindows = cgWindows.filter { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+        print("[Choo] 1s after close windowId=\(self.windowId): CGWindowList onScreen=\(ourWindows.count)")
+        for (i, w) in ourWindows.enumerated() {
+          let name = w[kCGWindowName as String] as? String ?? ""
+          let bounds = w[kCGWindowBounds as String] ?? "N/A"
+          let number = w[kCGWindowNumber as String] as? Int ?? 0
+          print("[Choo]   CGWindow[\(i)]: number=\(number), name='\(name)', bounds=\(bounds)")
+        }
+      }
+    }
   }
 
   /// 添加键盘事件监听器

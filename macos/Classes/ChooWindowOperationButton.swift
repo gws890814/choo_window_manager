@@ -743,7 +743,8 @@ class ChooWindowOperationButtonManager: NSView {
     anchor.spacing = spacing
     anchor.btnSize = btnSize
     
-    monitorEvent = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {event in
+    monitorEvent = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+      guard let self = self else { return event }
       if event.modifierFlags.contains(.option) {
         self.buttons[2].iconName = "add"
       } else {
