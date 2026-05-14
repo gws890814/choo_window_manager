@@ -1325,7 +1325,7 @@ extension ChooWindowManager {
   /// 3. 再次调用时根据allowClosing标志决定是否允许关闭
   public func windowShouldClose(_ sender: NSWindow) -> Bool {
     if !listener {
-      close(false)
+      close(true)
       return false
     }
     if allowClosing == nil {
